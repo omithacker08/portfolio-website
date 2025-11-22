@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Testing</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        .rich-editor { border: 1px solid #ccc; min-height: 200px; padding: 10px; }
+        .date-test { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Portfolio Website Form Testing</h1>
+    
+    <div class="test-section">
+        <h2>Rich Text Editor Test</h2>
+        <div class="rich-editor" contenteditable="true" style="direction: ltr; text-align: left;">
+            Type here to test text direction...
+        </div>
+        <p><strong>Status:</strong> ✅ Fixed - Added direction: ltr, text-align: left, unicode-bidi: normal</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Date Format Test</h2>
+        <div class="date-test">
+            <p>Current Date: <span id="current-date"></span></p>
+            <p>ISO Format: <span id="iso-date"></span></p>
+            <p>Localized: <span id="local-date"></span></p>
+        </div>
+        <p><strong>Status:</strong> ✅ Fixed - Updated field mapping in BlogCard component</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Sample Blog Content</h2>
+        <div style="border: 1px solid #eee; padding: 15px; background: #f9f9f9;">
+            <h3>Getting Started with React Hooks</h3>
+            <p><strong>Author:</strong> John Doe | <strong>Date:</strong> <span id="blog-date"></span> | <strong>Reading Time:</strong> 5 min</p>
+            <p><strong>Excerpt:</strong> Learn how to use React Hooks to manage state and side effects in functional components. This comprehensive guide covers useState, useEffect, and custom hooks.</p>
+            <p><strong>Tags:</strong> react, javascript, hooks, frontend</p>
+            <p><strong>Content:</strong> React Hooks revolutionized how we write React components by allowing us to use state and lifecycle methods in functional components...</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Sample Project Content</h2>
+        <div style="border: 1px solid #eee; padding: 15px; background: #f9f9f9;">
+            <h3>E-Commerce Platform</h3>
+            <p><strong>Domain:</strong> Web Development</p>
+            <p><strong>Technologies:</strong> React, Node.js, MongoDB, Stripe</p>
+            <p><strong>Problem:</strong> Small businesses need an affordable, easy-to-use online store solution</p>
+            <p><strong>Solution:</strong> Built a full-stack e-commerce platform with inventory management, payment processing, and analytics</p>
+            <p><strong>Benefits:</strong> 40% increase in sales, reduced operational costs, improved customer experience</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Sample AI Project Content</h2>
+        <div style="border: 1px solid #eee; padding: 15px; background: #f9f9f9;">
+            <h3>Smart Document Classifier</h3>
+            <p><strong>Use Case:</strong> Automated document categorization for legal firms</p>
+            <p><strong>Domain:</strong> Natural Language Processing</p>
+            <p><strong>Problem:</strong> Manual document sorting takes 5+ hours daily for law firms</p>
+            <p><strong>Benefits:</strong> 95% accuracy, 80% time savings, improved workflow efficiency</p>
+            <p><strong>Cost:</strong> $50/month per user</p>
+        </div>
+    </div>
+
+    <script>
+        // Test date formatting
+        const now = new Date();
+        document.getElementById('current-date').textContent = now.toString();
+        document.getElementById('iso-date').textContent = now.toISOString();
+        document.getElementById('local-date').textContent = now.toLocaleDateString();
+        document.getElementById('blog-date').textContent = now.toLocaleDateString();
+        
+        console.log('Form testing page loaded successfully');
+        console.log('Rich text editor direction test: Check if text flows left-to-right');
+        console.log('Date format test: All formats should display correctly');
+    </script>
+</body>
+</html>

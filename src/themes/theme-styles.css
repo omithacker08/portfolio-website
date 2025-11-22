@@ -1,0 +1,205 @@
+/* Theme-specific styles */
+
+/* Technical Theme */
+.theme-technical {
+  --border-radius: 8px;
+  --shadow: 0 4px 20px rgba(0, 122, 255, 0.1);
+  --gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.theme-technical .hero-section {
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+}
+
+.theme-technical .card {
+  border: 1px solid rgba(0, 122, 255, 0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.theme-technical .btn-primary {
+  background: var(--gradient);
+  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+}
+
+/* Photographer Theme */
+.theme-photographer {
+  --border-radius: 16px;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.theme-photographer .hero-section {
+  background: linear-gradient(rgba(44, 44, 44, 0.7), rgba(44, 44, 44, 0.7)), 
+              url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="%23ffffff" opacity="0.05"/><circle cx="80" cy="40" r="1" fill="%23ffffff" opacity="0.03"/><circle cx="40" cy="80" r="1" fill="%23ffffff" opacity="0.04"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+}
+
+.theme-photographer .card {
+  border: none;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+}
+
+.theme-photographer .btn-primary {
+  background: var(--primary-color);
+  border-radius: 25px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+.theme-photographer h1, .theme-photographer h2, .theme-photographer h3 {
+  font-family: var(--font-primary);
+  font-weight: 400;
+}
+
+/* Influencer Theme */
+.theme-influencer {
+  --border-radius: 20px;
+  --shadow: 0 8px 25px rgba(233, 30, 99, 0.15);
+  --gradient: linear-gradient(45deg, var(--primary-color) 0%, var(--secondary-color) 50%, var(--accent-color) 100%);
+}
+
+.theme-influencer .hero-section {
+  background: var(--gradient);
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-influencer .hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="white" opacity="0.1"/><circle cx="80" cy="30" r="1.5" fill="white" opacity="0.08"/><circle cx="60" cy="70" r="1" fill="white" opacity="0.06"/></svg>');
+}
+
+.theme-influencer .card {
+  border: 2px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              var(--gradient) border-box;
+  border-radius: 25px;
+  box-shadow: 0 10px 30px rgba(233, 30, 99, 0.1);
+}
+
+.theme-influencer .btn-primary {
+  background: var(--gradient);
+  border-radius: 25px;
+  font-weight: 600;
+  text-transform: none;
+  box-shadow: 0 6px 20px rgba(233, 30, 99, 0.3);
+}
+
+/* Doctor Theme */
+.theme-doctor {
+  --border-radius: 12px;
+  --shadow: 0 4px 16px rgba(13, 71, 161, 0.1);
+  --gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.theme-doctor .hero-section {
+  background: linear-gradient(135deg, #0D47A1 0%, #1976D2 100%);
+}
+
+.theme-doctor .card {
+  border: 1px solid rgba(13, 71, 161, 0.08);
+  box-shadow: 0 2px 16px rgba(13, 71, 161, 0.06);
+}
+
+.theme-doctor .btn-primary {
+  background: var(--primary-color);
+  border-radius: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.theme-doctor .section-header::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: var(--accent-color);
+  margin: 16px auto 0;
+}
+
+/* Advocate Theme */
+.theme-advocate {
+  --border-radius: 8px;
+  --shadow: 0 6px 24px rgba(26, 35, 126, 0.12);
+  --gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.theme-advocate .hero-section {
+  background: linear-gradient(135deg, #1A237E 0%, #3F51B5 100%);
+}
+
+.theme-advocate .card {
+  border: 1px solid rgba(26, 35, 126, 0.1);
+  box-shadow: 0 4px 20px rgba(26, 35, 126, 0.08);
+}
+
+.theme-advocate .btn-primary {
+  background: var(--primary-color);
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.theme-advocate h1, .theme-advocate h2, .theme-advocate h3 {
+  font-family: var(--font-primary);
+  font-weight: 600;
+}
+
+.theme-advocate .section-header {
+  border-bottom: 2px solid var(--accent-color);
+  padding-bottom: 16px;
+}
+
+/* Business Theme */
+.theme-business {
+  --border-radius: 10px;
+  --shadow: 0 6px 20px rgba(27, 94, 32, 0.1);
+  --gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.theme-business .hero-section {
+  background: linear-gradient(135deg, #1B5E20 0%, #388E3C 100%);
+}
+
+.theme-business .card {
+  border: 1px solid rgba(27, 94, 32, 0.1);
+  box-shadow: 0 4px 18px rgba(27, 94, 32, 0.08);
+}
+
+.theme-business .btn-primary {
+  background: var(--gradient);
+  border-radius: 8px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.theme-business .stat-card {
+  background: var(--gradient);
+  border-left: 4px solid var(--accent-color);
+}
+
+/* Common theme enhancements */
+body[class*="theme-"] {
+  font-family: var(--font-primary);
+}
+
+body[class*="theme-"] .btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body[class*="theme-"] .card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body[class*="theme-"] .card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+}

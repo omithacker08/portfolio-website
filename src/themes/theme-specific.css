@@ -1,0 +1,106 @@
+/* Theme-specific styles that don't interfere with technical theme */
+
+/* Photographer Theme */
+.theme-photographer {
+  --card-bg: var(--bg-secondary);
+  --border-color: rgba(44, 44, 44, 0.1);
+  --hover-bg: rgba(212, 175, 55, 0.1);
+}
+
+.theme-photographer .hero-section {
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+}
+
+.theme-photographer .portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Influencer Theme */
+.theme-influencer {
+  --card-bg: var(--bg-secondary);
+  --border-color: rgba(233, 30, 99, 0.1);
+  --hover-bg: rgba(233, 30, 99, 0.05);
+}
+
+.theme-influencer .social-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.theme-influencer .video-player {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Medical Theme */
+.theme-doctor {
+  --card-bg: var(--bg-secondary);
+  --border-color: rgba(13, 71, 161, 0.1);
+  --hover-bg: rgba(13, 71, 161, 0.05);
+}
+
+.theme-doctor .credentials {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.theme-doctor .appointment-btn {
+  background: var(--primary-color);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+}
+
+/* Legal Theme */
+.theme-advocate {
+  --card-bg: var(--bg-secondary);
+  --border-color: rgba(26, 35, 126, 0.1);
+  --hover-bg: rgba(26, 35, 126, 0.05);
+}
+
+.theme-advocate .case-studies {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.theme-advocate .publication-list {
+  list-style: none;
+  padding: 0;
+}
+
+.theme-advocate .publication-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Business Theme */
+.theme-business {
+  --card-bg: var(--bg-secondary);
+  --border-color: rgba(27, 94, 32, 0.1);
+  --hover-bg: rgba(27, 94, 32, 0.05);
+}
+
+.theme-business .achievements {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.theme-business .chart-container {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+/* Technical theme preserves original styling */
+.theme-technical {
+  /* No overrides - keeps original day/night mode */
+}

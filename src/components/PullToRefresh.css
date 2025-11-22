@@ -1,0 +1,41 @@
+.pull-to-refresh {
+  position: relative;
+  overflow: hidden;
+}
+
+.refresh-indicator {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  background: var(--card-bg);
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  transition: opacity 0.3s ease;
+}
+
+.refresh-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+  animation: none;
+}
+
+.refresh-indicator.refreshing .refresh-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.refresh-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
