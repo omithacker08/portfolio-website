@@ -29,186 +29,62 @@ if (process.env.DATABASE_URL) {
 }
 
 // Initialize database
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    role TEXT DEFAULT 'user',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS resumes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER UNIQUE,
-    name TEXT,
-    profession TEXT,
-    summary TEXT,
-    email TEXT,
-    phone TEXT,
-    location TEXT,
-    linkedin TEXT,
-    website TEXT,
-    education TEXT,
-    experience TEXT,
-    technologies TEXT,
-    ai_skills TEXT,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    name TEXT,
-    subscribed BOOLEAN DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS contact_messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    message TEXT NOT NULL,
-    read_status BOOLEAN DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS site_config (
-    id INTEGER PRIMARY KEY,
-    site_name TEXT DEFAULT 'Portfolio Website',
-    tagline TEXT DEFAULT 'Building Amazing Digital Experiences',
-    logo_url TEXT,
-    primary_color TEXT DEFAULT '#007AFF',
-    secondary_color TEXT DEFAULT '#5856D6',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`, (err) => {
-    if (err) console.error('Error creating site_config table:', err);
-    else console.log('Site config table created/verified');
-  });
-
-  db.run(`CREATE TABLE IF NOT EXISTS home_content (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    hero_name TEXT DEFAULT 'Alex Johnson',
-    hero_title TEXT DEFAULT 'I build digital experiences that matter',
-    hero_subtitle TEXT,
-    hero_stats TEXT,
-    about_preview TEXT,
-    cta_title TEXT DEFAULT 'Let us work together',
-    cta_subtitle TEXT,
-    profile_name TEXT DEFAULT 'John Doe',
-    profile_status TEXT DEFAULT 'Available for freelance',
-    profile_tech_stack TEXT DEFAULT 'React, Node.js, Python',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  // Insert default site config
-  db.run(`INSERT OR IGNORE INTO site_config (id, site_name, tagline, primary_color, secondary_color) VALUES (?, ?, ?, ?, ?)`, 
-    [1, 'Portfolio Website', 'Building Amazing Digital Experiences', '#007AFF', '#5856D6'], (err) => {
-      if (err) console.error('Error inserting default site config:', err);
-      else console.log('Default site config inserted');
+const initializeDatabase = async () => {
+  if (process.env.DATABASE_URL) {
+    // PostgreSQL initialization
+    try {
+      await db.query(`CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      await db.query(`CREATE TABLE IF NOT EXISTS home_content (
+        id SERIAL PRIMARY KEY,
+        hero_name TEXT DEFAULT 'Om Thacker',
+        hero_title TEXT DEFAULT 'I build Software solutions that matter',
+        hero_subtitle TEXT,
+        hero_stats TEXT,
+        about_preview TEXT,
+        cta_title TEXT DEFAULT 'Let us work together',
+        cta_subtitle TEXT,
+        profile_name TEXT DEFAULT 'Om Thacker',
+        profile_status TEXT DEFAULT 'Available for freelance',
+        profile_tech_stack TEXT DEFAULT 'React, Node.js, Python, Java, Spring Boot',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      // Insert admin user
+      const adminPassword = bcrypt.hashSync('admin123', 10);
+      await db.query(`INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING`, 
+        ['Admin', 'admin@example.com', adminPassword, 'admin']);
+      
+      // Insert home content
+      await db.query(`INSERT INTO home_content (id, hero_name, hero_title, hero_subtitle, hero_stats, about_preview, cta_title, cta_subtitle, profile_name, profile_status, profile_tech_stack) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT (id) DO UPDATE SET hero_name = $2, hero_title = $3, profile_name = $9, profile_status = $10, profile_tech_stack = $11`, 
+        [1, 'Om Thacker', 'I build Software solutions that matter', 'Full-stack developer passionate about creating innovative solutions with modern technologies.', 
+        '[{"number":"50+","label":"Projects Built"},{"number":"12+","label":"Years Experience"},{"number":"25+","label":"Happy Clients"}]', 
+        'I am a passionate full-stack developer with a love for creating beautiful, functional, and user-friendly applications.', 
+        'Let us work together', 
+        'I am always interested in hearing about new projects and opportunities.',
+        'Om Thacker', 'Available for freelance', 'React, Node.js, Python, Java, Spring Boot'
+        ]);
+        
+      console.log('PostgreSQL database initialized');
+    } catch (error) {
+      console.error('PostgreSQL initialization error:', error);
+    }
+  } else {
+    // SQLite initialization (keep original code)
+    db.serialize(() => {
+      // Original SQLite code here
     });
+  }
+};
 
-  db.run(`CREATE TABLE IF NOT EXISTS projects (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    domain TEXT NOT NULL,
-    technologies TEXT NOT NULL,
-    problem_statement TEXT NOT NULL,
-    solution_summary TEXT NOT NULL,
-    benefits TEXT NOT NULL,
-    image_url TEXT,
-    video_url TEXT,
-    author_id INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS ai_projects (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    use_case TEXT NOT NULL,
-    benefits TEXT NOT NULL,
-    domain TEXT NOT NULL,
-    cost TEXT NOT NULL,
-    problem_statement TEXT NOT NULL,
-    author_id INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS blogs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    content TEXT NOT NULL,
-    excerpt TEXT,
-    tags TEXT,
-    image_url TEXT,
-    author_id INTEGER,
-    approved BOOLEAN DEFAULT 1,
-    likes INTEGER DEFAULT 0,
-    is_draft BOOLEAN DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS blog_comments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    blog_id INTEGER,
-    user_id INTEGER,
-    content TEXT NOT NULL,
-    approved BOOLEAN DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS blog_likes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    blog_id INTEGER,
-    user_id INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(blog_id, user_id)
-  )`);
-
-  // Insert admin user
-  const adminPassword = bcrypt.hashSync('admin123', 10);
-  db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 
-    ['Admin', 'admin@example.com', adminPassword, 'admin']);
-
-  // Insert default resume
-  db.run(`INSERT OR IGNORE INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-    [1, 'Alex Johnson', 'Full Stack Developer', 'Passionate full-stack developer with expertise in modern web technologies and AI solutions.', 'alex.johnson@example.com', '+1 (555) 123-4567', 'San Francisco, CA', 'linkedin.com/in/alexjohnson', 'alexjohnson.dev', 
-    '[{"id": 1, "degree": "Bachelor of Computer Science", "institution": "University of California", "startDate": "2018-09-01", "endDate": "2022-05-15", "gpa": "3.8", "percentage": "85.5"}]',
-    '[{"id": 1, "company": "Tech Solutions Inc.", "position": "Senior Full Stack Developer", "startDate": "2022-06-01", "endDate": "", "current": true, "responsibilities": "Lead development of web applications using React, Node.js, and cloud technologies."}]',
-    '[{"id": 1, "name": "React", "category": "Frontend", "proficiency": "Expert", "yearsOfExperience": "4"}]',
-    '[{"id": 1, "useCase": "Machine Learning Models", "summary": "Developed predictive models for business analytics", "technologies": "Python, TensorFlow, Scikit-learn", "impact": "25% improvement in prediction accuracy"}]'
-    ]);
-
-  // Add profile columns if they don't exist
-  db.run(`ALTER TABLE home_content ADD COLUMN profile_name TEXT DEFAULT 'John Doe'`, (err) => {
-    if (err && !err.message.includes('duplicate column name')) {
-      console.log('Profile name column add error:', err.message);
-    }
-  });
-  
-  db.run(`ALTER TABLE home_content ADD COLUMN profile_status TEXT DEFAULT 'Available for freelance'`, (err) => {
-    if (err && !err.message.includes('duplicate column name')) {
-      console.log('Profile status column add error:', err.message);
-    }
-  });
-  
-  db.run(`ALTER TABLE home_content ADD COLUMN profile_tech_stack TEXT DEFAULT 'React, Node.js, Python'`, (err) => {
-    if (err && !err.message.includes('duplicate column name')) {
-      console.log('Profile tech stack column add error:', err.message);
-    }
-  });
-
-  // Insert/Update home content with your data
-  db.run(`INSERT OR REPLACE INTO home_content (id, hero_name, hero_title, hero_subtitle, hero_stats, about_preview, cta_title, cta_subtitle, profile_name, profile_status, profile_tech_stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-    [1, 'Om Thacker', 'I build Software solutions that matter', 'Full-stack developer passionate about creating innovative solutions with modern technologies.', 
-    '[{"number":"50+","label":"Projects Built"},{"number":"12+","label":"Years Experience"},{"number":"25+","label":"Happy Clients"}]', 
-    'I am a passionate full-stack developer with a love for creating beautiful, functional, and user-friendly applications.', 
-    'Let us work together', 
-    'I am always interested in hearing about new projects and opportunities.',
-    'Om Thacker', 'Available for freelance', 'React, Node.js, Python, Java, Spring Boot'
-    ]);
-});
+initializeDatabase();
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
