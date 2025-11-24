@@ -11,7 +11,18 @@ const JWT_SECRET = 'your-secret-key';
 app.use(cors());
 app.use(express.json());
 
-const db = new sqlite3.Database('./portfolio.db');
+const fs = require('fs');
+const dbPath = process.env.NODE_ENV === 'production' ? '/app/data/portfolio.db' : './portfolio.db';
+
+// Ensure data directory exists in production
+if (process.env.NODE_ENV === 'production') {
+  const dataDir = '/app/data';
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+}
+
+const db = new sqlite3.Database(dbPath);
 
 // Initialize database
 db.serialize(() => {
