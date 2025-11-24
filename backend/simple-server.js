@@ -876,6 +876,35 @@ app.put('/api/config', authenticateToken, async (req, res) => {
   }
 });
 
+// Database status endpoint
+app.get('/api/db-status', async (req, res) => {
+  try {
+    if (isPostgreSQL) {
+      const result = await db.query('SELECT NOW() as current_time, version() as pg_version');
+      res.json({
+        status: 'connected',
+        database: 'PostgreSQL',
+        timestamp: result.rows[0].current_time,
+        version: result.rows[0].pg_version,
+        connection_string_exists: !!process.env.DATABASE_URL
+      });
+    } else {
+      res.json({
+        status: 'connected',
+        database: 'SQLite',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      database: isPostgreSQL ? 'PostgreSQL' : 'SQLite',
+      error: err.message,
+      connection_string_exists: !!process.env.DATABASE_URL
+    });
+  }
+});
+
 // Test endpoint to verify database operations
 app.get('/api/config/test', (req, res) => {
   console.log('Testing database operations...');
