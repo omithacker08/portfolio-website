@@ -11,7 +11,22 @@ const JWT_SECRET = 'your-secret-key';
 app.use(cors());
 app.use(express.json());
 
-const db = new sqlite3.Database('./portfolio.db');
+// Database setup - PostgreSQL or SQLite
+let db;
+if (process.env.DATABASE_URL) {
+  // Use PostgreSQL in production
+  const { Pool } = require('pg');
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
+  db = pool;
+  console.log('Using PostgreSQL database');
+} else {
+  // Use SQLite in development
+  db = new sqlite3.Database('./portfolio.db');
+  console.log('Using SQLite database');
+}
 
 // Initialize database
 db.serialize(() => {
@@ -184,20 +199,15 @@ db.serialize(() => {
     }
   });
 
-  // Insert default home content
-  db.run(`INSERT OR IGNORE INTO home_content (id, hero_name, hero_title, hero_subtitle, hero_stats, about_preview, cta_title, cta_subtitle) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, 
-    [1, 'Alex Johnson', 'I build digital experiences that matter', 'Full-stack developer passionate about creating innovative solutions with modern technologies.', 
-    '[{"number":"50+","label":"Projects Built"},{"number":"3+","label":"Years Experience"},{"number":"15+","label":"Happy Clients"}]', 
+  // Insert/Update home content with your data
+  db.run(`INSERT OR REPLACE INTO home_content (id, hero_name, hero_title, hero_subtitle, hero_stats, about_preview, cta_title, cta_subtitle, profile_name, profile_status, profile_tech_stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+    [1, 'Om Thacker', 'I build Software solutions that matter', 'Full-stack developer passionate about creating innovative solutions with modern technologies.', 
+    '[{"number":"50+","label":"Projects Built"},{"number":"12+","label":"Years Experience"},{"number":"25+","label":"Happy Clients"}]', 
     'I am a passionate full-stack developer with a love for creating beautiful, functional, and user-friendly applications.', 
     'Let us work together', 
-    'I am always interested in hearing about new projects and opportunities.'
-    ], (err) => {
-      if (!err) {
-        // Update with default profile values if row was just inserted
-        db.run(`UPDATE home_content SET profile_name = ?, profile_status = ?, profile_tech_stack = ? WHERE id = 1 AND profile_name IS NULL`,
-          ['John Doe', 'Available for freelance', 'React, Node.js, Python']);
-      }
-    });
+    'I am always interested in hearing about new projects and opportunities.',
+    'Om Thacker', 'Available for freelance', 'React, Node.js, Python, Java, Spring Boot'
+    ]);
 });
 
 const authenticateToken = (req, res, next) => {
