@@ -265,6 +265,14 @@ const initializeDatabase = async () => {
         await db.query(`INSERT INTO ai_projects (use_case, benefits, domain, cost, problem_statement, author_id) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`, 
           ['Recommendation Engine', 'Recommendation engine for the sales team to contact customers with high probability of investing in the retirement funds', 'Finance', 'Low ($1K - $10K)', 'To increase the adoption of the Retireplus Product by the consumers and add more funds in it, Sales team needs some assistance where they can target the consumers who has high probability of investing the funds in it.', 1]);
           
+        // Insert sample resume data
+        await db.query(`INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) ON CONFLICT DO NOTHING`, 
+          [1, 'Om Thacker', 'Full Stack Developer', 'Passionate full-stack developer with expertise in modern web technologies and AI solutions.', 'om@example.com', '+1 (555) 123-4567', 'San Francisco, CA', 'linkedin.com/in/omthacker', 'omthacker.dev', 
+          '[{"id":1,"degree":"Bachelor of Computer Science","institution":"University of California","startDate":"2018-09-01","endDate":"2022-05-15","gpa":"3.8"}]',
+          '[{"id":1,"company":"Tech Solutions Inc.","position":"Senior Full Stack Developer","startDate":"2022-06-01","endDate":"","current":true,"responsibilities":"Lead development of web applications using React, Node.js, and cloud technologies."}]',
+          '[{"id":1,"name":"React","category":"Frontend","proficiency":"Expert","yearsOfExperience":"4"}]',
+          '[{"id":1,"useCase":"Machine Learning Models","summary":"Developed predictive models for business analytics","technologies":"Python, TensorFlow, Scikit-learn","impact":"25% improvement in prediction accuracy"}]']);
+          
         console.log('Sample data inserted successfully');
       } catch (sampleError) {
         console.log('Sample data insertion (may already exist):', sampleError.message);
@@ -315,9 +323,10 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // Resume
-app.get('/api/resume/:userId', (req, res) => {
-  db.get('SELECT * FROM resumes WHERE user_id = ?', [req.params.userId], (err, resume) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+app.get('/api/resume/:userId', async (req, res) => {
+  try {
+    const query = isPostgreSQL ? 'SELECT * FROM resumes WHERE user_id = $1' : 'SELECT * FROM resumes WHERE user_id = ?';
+    const resume = await dbGet(query, [req.params.userId]);
     if (resume) {
       resume.education = JSON.parse(resume.education || '[]');
       resume.experience = JSON.parse(resume.experience || '[]');
@@ -325,7 +334,10 @@ app.get('/api/resume/:userId', (req, res) => {
       resume.aiSkills = JSON.parse(resume.ai_skills || '[]');
     }
     res.json(resume || {});
-  });
+  } catch (err) {
+    console.error('Database error loading resume:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 app.post('/api/resume', authenticateToken, (req, res) => {
@@ -422,11 +434,14 @@ app.delete('/api/projects/:id', authenticateToken, (req, res) => {
 });
 
 // AI Projects
-app.get('/api/ai-projects', (req, res) => {
-  db.all('SELECT * FROM ai_projects ORDER BY created_at DESC', (err, projects) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+app.get('/api/ai-projects', async (req, res) => {
+  try {
+    const projects = await dbQuery('SELECT * FROM ai_projects ORDER BY created_at DESC');
     res.json(projects);
-  });
+  } catch (err) {
+    console.error('Database error loading AI projects:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 app.post('/api/ai-projects', authenticateToken, (req, res) => {
@@ -469,16 +484,19 @@ app.get('/api/contact/messages', authenticateToken, (req, res) => {
 });
 
 // Blogs
-app.get('/api/blogs', (req, res) => {
-  db.all(`SELECT b.*, u.name as author_name, 
-          (SELECT COUNT(*) FROM blog_likes WHERE blog_id = b.id) as likes 
-          FROM blogs b 
-          LEFT JOIN users u ON b.author_id = u.id 
-          WHERE b.is_draft = 0 
-          ORDER BY b.created_at DESC`, (err, blogs) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+app.get('/api/blogs', async (req, res) => {
+  try {
+    const blogs = await dbQuery(`SELECT b.*, u.name as author_name, 
+            (SELECT COUNT(*) FROM blog_likes WHERE blog_id = b.id) as likes 
+            FROM blogs b 
+            LEFT JOIN users u ON b.author_id = u.id 
+            WHERE b.is_draft = 0 
+            ORDER BY b.created_at DESC`);
     res.json(blogs);
-  });
+  } catch (err) {
+    console.error('Database error loading blogs:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 app.post('/api/blogs', authenticateToken, (req, res) => {
