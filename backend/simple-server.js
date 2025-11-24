@@ -343,14 +343,17 @@ app.get('/api/resume/:userId', async (req, res) => {
 });
 
 app.post('/api/resume', authenticateToken, async (req, res) => {
-  const { name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, aiSkills } = req.body;
+  const { name, title, profession, summary, email, phone, location, linkedin, website, education, experience, skills, technologies, achievements, aiSkills } = req.body;
+  const finalTitle = title || profession;
+  const finalSkills = skills || technologies || [];
+  const finalAchievements = achievements || aiSkills || [];
   try {
     // First try to update existing record
     const updateQuery = isPostgreSQL 
       ? `UPDATE resumes SET name = $2, profession = $3, summary = $4, email = $5, phone = $6, location = $7, linkedin = $8, website = $9, education = $10, experience = $11, technologies = $12, ai_skills = $13, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1`
       : `UPDATE resumes SET name = ?, profession = ?, summary = ?, email = ?, phone = ?, location = ?, linkedin = ?, website = ?, education = ?, experience = ?, technologies = ?, ai_skills = ?, updated_at = datetime('now') WHERE user_id = ?`;
     
-    const result = await dbRun(updateQuery, [req.user.id, name, profession, summary, email, phone, location, linkedin, website, JSON.stringify(education || []), JSON.stringify(experience || []), JSON.stringify(technologies || []), JSON.stringify(aiSkills || [])]);
+    const result = await dbRun(updateQuery, [req.user.id, name, finalTitle, summary, email, phone, location, linkedin, website, JSON.stringify(education || []), JSON.stringify(experience || []), JSON.stringify(finalSkills), JSON.stringify(finalAchievements)]);
     
     // If no rows were updated, insert new record
     if (result.changes === 0) {
@@ -358,7 +361,7 @@ app.post('/api/resume', authenticateToken, async (req, res) => {
         ? `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP)`
         : `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
       
-      await dbRun(insertQuery, [req.user.id, name, profession, summary, email, phone, location, linkedin, website, JSON.stringify(education || []), JSON.stringify(experience || []), JSON.stringify(technologies || []), JSON.stringify(aiSkills || [])]);
+      await dbRun(insertQuery, [req.user.id, name, finalTitle, summary, email, phone, location, linkedin, website, JSON.stringify(education || []), JSON.stringify(experience || []), JSON.stringify(finalSkills), JSON.stringify(finalAchievements)]);
     }
     
     res.json({ message: 'Resume updated successfully' });
@@ -752,11 +755,19 @@ app.post('/api/force-resume-update', async (req, res) => {
       aiSkills: [{"id":1,"useCase":"Machine Learning Models","summary":"Developed predictive models for business analytics","technologies":"Python, TensorFlow, Scikit-learn","impact":"25% improvement in prediction accuracy"}]
     };
     
-    const query = isPostgreSQL 
-      ? `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP) ON CONFLICT (user_id) DO UPDATE SET name = $2, profession = $3, summary = $4, email = $5, phone = $6, location = $7, linkedin = $8, website = $9, education = $10, experience = $11, technologies = $12, ai_skills = $13, updated_at = CURRENT_TIMESTAMP`
-      : `INSERT OR REPLACE INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
+    const updateQuery = isPostgreSQL 
+      ? `UPDATE resumes SET name = $2, profession = $3, summary = $4, email = $5, phone = $6, location = $7, linkedin = $8, website = $9, education = $10, experience = $11, technologies = $12, ai_skills = $13, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1`
+      : `UPDATE resumes SET name = ?, profession = ?, summary = ?, email = ?, phone = ?, location = ?, linkedin = ?, website = ?, education = ?, experience = ?, technologies = ?, ai_skills = ?, updated_at = datetime('now') WHERE user_id = ?`;
     
-    await dbRun(query, [1, resumeData.name, resumeData.profession, resumeData.summary, resumeData.email, resumeData.phone, resumeData.location, resumeData.linkedin, resumeData.website, JSON.stringify(resumeData.education), JSON.stringify(resumeData.experience), JSON.stringify(resumeData.technologies), JSON.stringify(resumeData.aiSkills)]);
+    const result = await dbRun(updateQuery, [1, resumeData.name, resumeData.profession, resumeData.summary, resumeData.email, resumeData.phone, resumeData.location, resumeData.linkedin, resumeData.website, JSON.stringify(resumeData.education), JSON.stringify(resumeData.experience), JSON.stringify(resumeData.technologies), JSON.stringify(resumeData.aiSkills)]);
+    
+    if (result.changes === 0) {
+      const insertQuery = isPostgreSQL 
+        ? `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP)`
+        : `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
+      
+      await dbRun(insertQuery, [1, resumeData.name, resumeData.profession, resumeData.summary, resumeData.email, resumeData.phone, resumeData.location, resumeData.linkedin, resumeData.website, JSON.stringify(resumeData.education), JSON.stringify(resumeData.experience), JSON.stringify(resumeData.technologies), JSON.stringify(resumeData.aiSkills)]);
+    }
     
     res.json({ message: 'Resume data force updated successfully' });
   } catch (err) {
