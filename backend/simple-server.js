@@ -110,6 +110,105 @@ const initializeDatabase = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`);
       
+      await db.query(`CREATE TABLE IF NOT EXISTS site_config (
+        id INTEGER PRIMARY KEY,
+        site_name TEXT DEFAULT 'Portfolio Website',
+        tagline TEXT DEFAULT 'Building Amazing Digital Experiences',
+        logo_url TEXT,
+        primary_color TEXT DEFAULT '#007AFF',
+        secondary_color TEXT DEFAULT '#5856D6',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      await db.query(`CREATE TABLE IF NOT EXISTS blogs (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        excerpt TEXT,
+        tags TEXT,
+        image_url TEXT,
+        author_id INTEGER,
+        is_draft INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      await db.query(`CREATE TABLE IF NOT EXISTS projects (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        domain TEXT NOT NULL,
+        technologies TEXT NOT NULL,
+        problem_statement TEXT NOT NULL,
+        solution_summary TEXT,
+        benefits TEXT,
+        image_url TEXT,
+        video_url TEXT,
+        author_id INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      await db.query(`CREATE TABLE IF NOT EXISTS ai_projects (
+        id SERIAL PRIMARY KEY,
+        use_case TEXT NOT NULL,
+        benefits TEXT NOT NULL,
+        domain TEXT NOT NULL,
+        cost TEXT,
+        problem_statement TEXT NOT NULL,
+        author_id INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      await db.query(`CREATE TABLE IF NOT EXISTS resumes (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        name TEXT,
+        profession TEXT,
+        summary TEXT,
+        email TEXT,
+        phone TEXT,
+        location TEXT,
+        linkedin TEXT,
+        website TEXT,
+        education TEXT,
+        experience TEXT,
+        technologies TEXT,
+        ai_skills TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      await db.query(`CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        name TEXT,
+        subscribed INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      await db.query(`CREATE TABLE IF NOT EXISTS contact_messages (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      await db.query(`CREATE TABLE IF NOT EXISTS blog_comments (
+        id SERIAL PRIMARY KEY,
+        blog_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        approved INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      await db.query(`CREATE TABLE IF NOT EXISTS blog_likes (
+        id SERIAL PRIMARY KEY,
+        blog_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(blog_id, user_id)
+      )`);
+      
       // Insert admin user
       const adminPassword = bcrypt.hashSync('admin123', 10);
       await db.query(`INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING`, 
@@ -124,6 +223,10 @@ const initializeDatabase = async () => {
         'I am always interested in hearing about new projects and opportunities.',
         'Om Thacker', 'Available for freelance', 'React, Node.js, Python, Java, Spring Boot'
         ]);
+        
+      // Insert site config
+      await db.query(`INSERT INTO site_config (id, site_name, tagline, primary_color, secondary_color) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING`, 
+        [1, 'Portfolio Website', 'Building Amazing Digital Experiences', '#007AFF', '#5856D6']);
         
       console.log('PostgreSQL database initialized');
     } catch (error) {
