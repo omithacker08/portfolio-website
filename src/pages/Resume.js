@@ -37,7 +37,7 @@ const Resume = () => {
       console.log('Loading admin resume for public viewing');
       loadResume(1);
     }
-  }, [isAuthenticated, user, loadResume]);
+  }, [isAuthenticated, user]); // Removed loadResume from dependencies
 
   useEffect(() => {
     // Only update form data if not currently editing
