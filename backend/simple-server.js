@@ -20,11 +20,30 @@ if (process.env.DATABASE_URL) {
   const { Pool } = require('pg');
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+    acquireTimeoutMillis: 60000,
+    createTimeoutMillis: 30000,
+    destroyTimeoutMillis: 5000,
+    reapIntervalMillis: 1000,
+    createRetryIntervalMillis: 200
   });
+  
+  // Test connection
+  pool.connect((err, client, release) => {
+    if (err) {
+      console.error('Error acquiring client', err.stack);
+    } else {
+      console.log('PostgreSQL connected successfully');
+      release();
+    }
+  });
+  
   db = pool;
   isPostgreSQL = true;
-  console.log('Using PostgreSQL database');
+  console.log('Using PostgreSQL database with connection pooling');
 } else {
   // Use SQLite in development
   db = new sqlite3.Database('./portfolio.db');
@@ -33,56 +52,70 @@ if (process.env.DATABASE_URL) {
 }
 
 // Database query wrapper
-const dbQuery = (query, params = []) => {
-  return new Promise((resolve, reject) => {
-    if (isPostgreSQL) {
-      db.query(query, params, (err, result) => {
-        if (err) reject(err);
-        else resolve(result.rows);
-      });
-    } else {
-      db.all(query, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
+const dbQuery = async (query, params = [], retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      if (isPostgreSQL) {
+        const result = await db.query(query, params);
+        return result.rows;
+      } else {
+        return new Promise((resolve, reject) => {
+          db.all(query, params, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+          });
+        });
+      }
+    } catch (err) {
+      console.error(`Database query attempt ${i + 1} failed:`, err.message);
+      if (i === retries - 1) throw err;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
     }
-  });
+  }
 };
 
-const dbGet = (query, params = []) => {
-  return new Promise((resolve, reject) => {
-    if (isPostgreSQL) {
-      db.query(query, params, (err, result) => {
-        if (err) {
-          console.error('PostgreSQL query error:', err);
-          reject(err);
-        } else {
-          resolve(result.rows[0] || null);
-        }
-      });
-    } else {
-      db.get(query, params, (err, row) => {
-        if (err) reject(err);
-        else resolve(row || null);
-      });
+const dbGet = async (query, params = [], retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      if (isPostgreSQL) {
+        const result = await db.query(query, params);
+        return result.rows[0] || null;
+      } else {
+        return new Promise((resolve, reject) => {
+          db.get(query, params, (err, row) => {
+            if (err) reject(err);
+            else resolve(row || null);
+          });
+        });
+      }
+    } catch (err) {
+      console.error(`Database query attempt ${i + 1} failed:`, err.message);
+      if (i === retries - 1) throw err;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
     }
-  });
+  }
 };
 
-const dbRun = (query, params = []) => {
-  return new Promise((resolve, reject) => {
-    if (isPostgreSQL) {
-      db.query(query, params, (err, result) => {
-        if (err) reject(err);
-        else resolve({ changes: result.rowCount, lastID: result.insertId });
-      });
-    } else {
-      db.run(query, params, function(err) {
-        if (err) reject(err);
-        else resolve({ changes: this.changes, lastID: this.lastID });
-      });
+const dbRun = async (query, params = [], retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      if (isPostgreSQL) {
+        const result = await db.query(query, params);
+        return { changes: result.rowCount, lastID: result.insertId };
+      } else {
+        return new Promise((resolve, reject) => {
+          db.run(query, params, function(err) {
+            if (err) reject(err);
+            else resolve({ changes: this.changes, lastID: this.lastID });
+          });
+        });
+      }
+    } catch (err) {
+      console.error(`Database run attempt ${i + 1} failed:`, err.message);
+      if (i === retries - 1) throw err;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
     }
-  });
+  }
 };
 
 // Initialize database
