@@ -331,7 +331,9 @@ app.get('/api/resume/:userId', async (req, res) => {
       resume.education = JSON.parse(resume.education || '[]');
       resume.experience = JSON.parse(resume.experience || '[]');
       resume.technologies = JSON.parse(resume.technologies || '[]');
+      resume.skills = JSON.parse(resume.technologies || '[]');
       resume.aiSkills = JSON.parse(resume.ai_skills || '[]');
+      resume.achievements = JSON.parse(resume.ai_skills || '[]');
     }
     res.json(resume || {});
   } catch (err) {
