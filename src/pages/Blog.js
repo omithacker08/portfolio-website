@@ -142,7 +142,7 @@ const Blog = () => {
     }
   };
 
-  const approvedBlogs = blogs.filter(blog => blog.approved);
+  const approvedBlogs = blogs.filter(blog => !blog.is_draft);
 
   const handleLikeBlog = async (blogId) => {
     if (!isAuthenticated) {
