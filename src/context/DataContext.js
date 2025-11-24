@@ -54,10 +54,11 @@ export const DataProvider = ({ children }) => {
   const loadSiteConfig = async () => {
     try {
       setLoadingState('config', true);
+      console.log('Loading site config from API...');
       const config = await ApiService.getSiteConfig();
+      console.log('Site config loaded:', config);
       if (config) {
         setSiteConfig(config);
-        console.log('Loaded config from database:', config);
       }
     } catch (error) {
       console.error('Failed to load site config:', error);
@@ -313,10 +314,23 @@ export const DataProvider = ({ children }) => {
 
   const loadHomeContent = async () => {
     try {
+      console.log('Loading home content from API...');
       const homeData = await ApiService.getHomeContent();
+      console.log('Home content loaded:', homeData);
       setHomeContent(homeData);
     } catch (error) {
       console.error('Failed to load home content:', error);
+      // Set default home content if API fails
+      setHomeContent({
+        hero_name: 'Alex Johnson',
+        hero_title: 'I build digital experiences that matter',
+        hero_subtitle: 'Full-stack developer passionate about creating innovative solutions.',
+        hero_stats: [
+          { number: '50+', label: 'Projects Built' },
+          { number: '3+', label: 'Years Experience' },
+          { number: '15+', label: 'Happy Clients' }
+        ]
+      });
     }
   };
 
