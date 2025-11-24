@@ -149,12 +149,7 @@ const Auth = () => {
               </p>
             </div>
 
-            <div className="demo-credentials">
-              <p><strong>Demo Credentials:</strong></p>
-              <p>Admin: admin@example.com</p>
-              <p>Password: admin123</p>
-              <p>OTP: any 4-digit number (default: 1234)</p>
-            </div>
+
           </div>
         </div>
       </div>
