@@ -12,15 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 const fs = require('fs');
-const dbPath = process.env.NODE_ENV === 'production' ? '/app/data/portfolio.db' : './portfolio.db';
-
-// Ensure data directory exists in production
-if (process.env.NODE_ENV === 'production') {
-  const dataDir = '/app/data';
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-}
+const dbPath = process.env.NODE_ENV === 'production' ? '/tmp/portfolio.db' : './portfolio.db';
 
 const db = new sqlite3.Database(dbPath);
 
