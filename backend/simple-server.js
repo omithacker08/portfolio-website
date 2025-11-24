@@ -247,6 +247,28 @@ const initializeDatabase = async () => {
         [1, 'Recommendation Engine', 'Recommendation engine for the sales team to contact customers with high probability of investing in the retirement funds', 'Finance', 'Low ($1K - $10K)', 'To increase the adoption of the Retireplus Product by the consumers and add more funds in it, Sales team needs some assistance where they can target the consumers who has high probability of investing the funds in it. There is a need of Recommendation engine which will help the team for the same.', 1]);
         
       console.log('PostgreSQL database initialized with sample data');
+      
+      // Force sample data insertion on every startup
+      try {
+        await db.query(`INSERT INTO blogs (title, content, excerpt, tags, author_id, is_draft) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`, 
+          ['Test Blog Post', 'This is a test blog post to check if the like functionality works properly. It has enough content to meet the minimum requirements.', 'A test blog post', 'test,blog', 1, 0]);
+          
+        await db.query(`INSERT INTO projects (name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`, 
+          ['Procure to Pay', 'ERP', 'Java, Struts framework, Javascript, CSS, HTML, Dojo, SQL', 'Procurement management system to manage the procurement life cycle of Large companies.', 'Procurement management system to manage the procurement life cycle of Large companies.', 'Procurement management system to manage the procurement life cycle of Large companies.', 1]);
+          
+        await db.query(`INSERT INTO projects (name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`, 
+          ['Asset Management product', 'Web', 'Java, Spring framework, Javascript, CSS, SQL', 'Asset management need for enterprise integrated with Procurement and expense manangement systems', 'Asset management need for enterprise integrated with Procurement and expense manangement systems', '1. Easy-to-use UI\n2. Account entries for Tally\n3. Clear reporting and analytics\n4. Audit logs\n5. Customizable workflows\n6. Role-based approval system', 1]);
+          
+        await db.query(`INSERT INTO projects (name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`, 
+          ['Expense Management System', 'ERP', 'Spring framework, Hibernate, SQL, Javascript', 'Large enterprises needed a way to track their expense that can not only help create expense data but also offer a way to integrate with third-party systems, generate account entries, generate audit logs, and offer a clear reporting and analytics.', 'This product was created for enterprises to manage their expenses in a better way. It provided a very customizable use-cases that can cater any type of requirement.', '1. Easy to use UI for tracking expenses\n2. Account entries for Tally\n3. Clear reporting and anaytics\n4. Audit logs\n5. Customizable workflows\n6. Role-based approval system', 1]);
+          
+        await db.query(`INSERT INTO ai_projects (use_case, benefits, domain, cost, problem_statement, author_id) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`, 
+          ['Recommendation Engine', 'Recommendation engine for the sales team to contact customers with high probability of investing in the retirement funds', 'Finance', 'Low ($1K - $10K)', 'To increase the adoption of the Retireplus Product by the consumers and add more funds in it, Sales team needs some assistance where they can target the consumers who has high probability of investing the funds in it.', 1]);
+          
+        console.log('Sample data inserted successfully');
+      } catch (sampleError) {
+        console.log('Sample data insertion (may already exist):', sampleError.message);
+      }
     } catch (error) {
       console.error('PostgreSQL initialization error:', error);
     }
@@ -675,35 +697,7 @@ app.get('/api/users', authenticateToken, async (req, res) => {
   }
 });
 
-// Data migration endpoint
-app.post('/api/migrate-data', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
-  
-  try {
-    // Insert sample blog data
-    await dbRun(`INSERT INTO blogs (id, title, content, excerpt, tags, author_id, is_draft) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`, 
-      [1, 'Test Blog Post', 'This is a test blog post to check if the like functionality works properly. It has enough content to meet the minimum requirements.', 'A test blog post', 'test,blog', 1, 0]);
-      
-    // Insert sample projects data
-    await dbRun(`INSERT INTO projects (id, name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`, 
-      [1, 'Procure to Pay', 'ERP', 'Java, Struts framework, Javascript, CSS, HTML, Dojo, SQL', 'Procurement management system to manage the procurement life cycle of Large companies.', 'Procurement management system to manage the procurement life cycle of Large companies.', 'Procurement management system to manage the procurement life cycle of Large companies.', 1]);
-      
-    await dbRun(`INSERT INTO projects (id, name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`, 
-      [2, 'Asset Management product', 'Web', 'Java, Spring framework, Javascript, CSS, SQL', 'Asset management need for enterprise integrated with Procurement and expense manangement systems', 'Asset management need for enterprise integrated with Procurement and expense manangement systems', '1. Easy-to-use UI for tracking expenses\n2. Account entries for Tally and other such tools\n3. Clear reporting and analytics\n4. Audit logs\n5. Customizable workflows\n6. Role-based approval system', 1]);
-      
-    await dbRun(`INSERT INTO projects (id, name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`, 
-      [3, 'Expense Management System', 'ERP', 'Spring framework, Hibernate, SQL, Javascript', 'Large enterprises needed a way to track their expense that can not only help create expense data but also offer a way to integrate with third-party systems, generate account entries, generate audit logs, and offer a clear reporting and analytics.', 'This product was created for enterprises to manage their expenses in a better way. It provided a very customizable use-cases that can cater any type of requirement. Some of the key features are its reporting and analytics feature, Role-based approval system, customizable workflows and its easy-to-use UI.', '1. Easy to use UI for tracking expenses\n2. Account entries for Tally and other such tools\n3. Clear reporting and anaytics\n4. Audit logs\n5. Customizable workflows\n6. Role-based approval system', 1]);
-      
-    // Insert sample AI project data
-    await dbRun(`INSERT INTO ai_projects (id, use_case, benefits, domain, cost, problem_statement, author_id) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`, 
-      [1, 'Recommendation Engine', 'Recommendation engine for the sales team to contact customers with high probability of investing in the retirement funds', 'Finance', 'Low ($1K - $10K)', 'To increase the adoption of the Retireplus Product by the consumers and add more funds in it, Sales team needs some assistance where they can target the consumers who has high probability of investing the funds in it. There is a need of Recommendation engine which will help the team for the same.', 1]);
-      
-    res.json({ message: 'Sample data migrated successfully' });
-  } catch (err) {
-    console.error('Migration error:', err);
-    res.status(500).json({ error: 'Migration failed: ' + err.message });
-  }
-});
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Simple Server running on http://localhost:${PORT}`);
