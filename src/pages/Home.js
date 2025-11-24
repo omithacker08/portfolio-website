@@ -14,19 +14,24 @@ const Home = () => {
         <div className="container">
           <div className="hero-content">
             <div className="hero-text">
-              <div className="hero-greeting">👋 Hi, I'm {homeContent?.hero_name || siteConfig?.site_name || 'John Doe'}</div>
+              <div className="hero-greeting">👋 Hi, I'm {homeContent?.hero_name || 'John Doe'}</div>
               <h1 className="hero-title">
-                {homeContent?.hero_title || siteConfig?.tagline || 'I build digital experiences that matter'}
+                {homeContent?.hero_title || 'I build digital experiences that matter'}
               </h1>
               <p className="hero-subtitle">
-                {homeContent?.hero_subtitle || 'Full-stack developer passionate about creating innovative solutions with modern technologies. Currently crafting amazing web applications and AI-powered tools.'}
+                {homeContent?.hero_subtitle || 'Full-stack developer passionate about creating innovative solutions with modern technologies.'}
               </p>
               <div className="hero-stats">
-                {(homeContent?.hero_stats || [
+                {homeContent?.hero_stats ? homeContent.hero_stats.map((stat, index) => (
+                  <div key={index} className="stat">
+                    <span className="stat-number">{stat.number}</span>
+                    <span className="stat-label">{stat.label}</span>
+                  </div>
+                )) : [
                   { number: '50+', label: 'Projects Built' },
                   { number: '3+', label: 'Years Experience' },
                   { number: '15+', label: 'Happy Clients' }
-                ]).map((stat, index) => (
+                ].map((stat, index) => (
                   <div key={index} className="stat">
                     <span className="stat-number">{stat.number}</span>
                     <span className="stat-label">{stat.label}</span>
