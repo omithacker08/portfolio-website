@@ -13,6 +13,8 @@ app.use(express.json());
 
 // Database setup - PostgreSQL or SQLite
 let db;
+let isPostgreSQL = false;
+
 if (process.env.DATABASE_URL) {
   // Use PostgreSQL in production
   const { Pool } = require('pg');
@@ -21,12 +23,63 @@ if (process.env.DATABASE_URL) {
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   });
   db = pool;
+  isPostgreSQL = true;
   console.log('Using PostgreSQL database');
 } else {
   // Use SQLite in development
   db = new sqlite3.Database('./portfolio.db');
+  isPostgreSQL = false;
   console.log('Using SQLite database');
 }
+
+// Database query wrapper
+const dbQuery = (query, params = []) => {
+  return new Promise((resolve, reject) => {
+    if (isPostgreSQL) {
+      db.query(query, params, (err, result) => {
+        if (err) reject(err);
+        else resolve(result.rows);
+      });
+    } else {
+      db.all(query, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    }
+  });
+};
+
+const dbGet = (query, params = []) => {
+  return new Promise((resolve, reject) => {
+    if (isPostgreSQL) {
+      db.query(query, params, (err, result) => {
+        if (err) reject(err);
+        else resolve(result.rows[0] || null);
+      });
+    } else {
+      db.get(query, params, (err, row) => {
+        if (err) reject(err);
+        else resolve(row || null);
+      });
+    }
+  });
+};
+
+const dbRun = (query, params = []) => {
+  return new Promise((resolve, reject) => {
+    if (isPostgreSQL) {
+      db.query(query, params, (err, result) => {
+        if (err) reject(err);
+        else resolve({ changes: result.rowCount, lastID: result.insertId });
+      });
+    } else {
+      db.run(query, params, function(err) {
+        if (err) reject(err);
+        else resolve({ changes: this.changes, lastID: this.lastID });
+      });
+    }
+  });
+};
 
 // Initialize database
 const initializeDatabase = async () => {
@@ -147,25 +200,34 @@ app.get('/api/newsletter/subscribers', authenticateToken, (req, res) => {
 });
 
 // Home Content
-app.get('/api/home', (req, res) => {
-  db.get('SELECT * FROM home_content WHERE id = 1', (err, home) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+app.get('/api/home', async (req, res) => {
+  try {
+    const home = await dbGet('SELECT * FROM home_content WHERE id = 1');
     if (home && home.hero_stats) {
       home.hero_stats = JSON.parse(home.hero_stats);
     }
     res.json(home || {});
-  });
+  } catch (err) {
+    console.error('Database error loading home content:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-app.put('/api/home', authenticateToken, (req, res) => {
+app.put('/api/home', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
   const { heroName, heroTitle, heroSubtitle, heroStats, aboutPreview, ctaTitle, ctaSubtitle, profileName, profileStatus, profileTechStack } = req.body;
-  db.run(`UPDATE home_content SET hero_name = ?, hero_title = ?, hero_subtitle = ?, hero_stats = ?, about_preview = ?, cta_title = ?, cta_subtitle = ?, profile_name = ?, profile_status = ?, profile_tech_stack = ?, updated_at = datetime('now') WHERE id = 1`, 
-    [heroName, heroTitle, heroSubtitle, JSON.stringify(heroStats || []), aboutPreview, ctaTitle, ctaSubtitle, profileName, profileStatus, profileTechStack], 
-    (err) => {
-      if (err) return res.status(500).json({ error: 'Database error' });
-      res.json({ message: 'Home content updated successfully' });
-    });
+  
+  try {
+    const updateQuery = isPostgreSQL 
+      ? `UPDATE home_content SET hero_name = $1, hero_title = $2, hero_subtitle = $3, hero_stats = $4, about_preview = $5, cta_title = $6, cta_subtitle = $7, profile_name = $8, profile_status = $9, profile_tech_stack = $10, updated_at = CURRENT_TIMESTAMP WHERE id = 1`
+      : `UPDATE home_content SET hero_name = ?, hero_title = ?, hero_subtitle = ?, hero_stats = ?, about_preview = ?, cta_title = ?, cta_subtitle = ?, profile_name = ?, profile_status = ?, profile_tech_stack = ?, updated_at = datetime('now') WHERE id = 1`;
+    
+    await dbRun(updateQuery, [heroName, heroTitle, heroSubtitle, JSON.stringify(heroStats || []), aboutPreview, ctaTitle, ctaSubtitle, profileName, profileStatus, profileTechStack]);
+    res.json({ message: 'Home content updated successfully' });
+  } catch (err) {
+    console.error('Database error updating home content:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Projects
@@ -352,18 +414,10 @@ app.post('/api/contact', (req, res) => {
 });
 
 // Site Config
-app.get('/api/config', (req, res) => {
+app.get('/api/config', async (req, res) => {
   console.log('GET /api/config called');
-  db.get('SELECT * FROM site_config WHERE id = 1', (err, config) => {
-    if (err) {
-      console.log('Database error loading config:', err);
-      return res.json({
-        site_name: 'Portfolio Website',
-        tagline: 'Building Amazing Digital Experiences',
-        primary_color: '#007AFF',
-        secondary_color: '#5856D6'
-      });
-    }
+  try {
+    const config = await dbGet('SELECT * FROM site_config WHERE id = 1');
     if (!config) {
       console.log('No config found in database, returning defaults');
       return res.json({
@@ -375,52 +429,61 @@ app.get('/api/config', (req, res) => {
     }
     console.log('Loaded config from database:', config);
     res.json(config);
-  });
+  } catch (err) {
+    console.log('Database error loading config:', err);
+    res.json({
+      site_name: 'Portfolio Website',
+      tagline: 'Building Amazing Digital Experiences',
+      primary_color: '#007AFF',
+      secondary_color: '#5856D6'
+    });
+  }
 });
 
 // Config endpoint with database save
-app.put('/api/config', authenticateToken, (req, res) => {
+app.put('/api/config', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
   
   console.log('PUT /api/config called with:', req.body);
   const { siteName, tagline, logoUrl, colors } = req.body;
   
-  // First add logo_url column if it doesn't exist
-  db.run(`ALTER TABLE site_config ADD COLUMN logo_url TEXT`, (alterErr) => {
-    // Ignore error if column already exists
-    if (alterErr && !alterErr.message.includes('duplicate column name')) {
-      console.log('Column add error (may be expected):', alterErr.message);
+  try {
+    // Try to update first
+    const updateQuery = isPostgreSQL 
+      ? `UPDATE site_config SET site_name = $1, tagline = $2, logo_url = $3, primary_color = $4, secondary_color = $5, updated_at = CURRENT_TIMESTAMP WHERE id = 1`
+      : `UPDATE site_config SET site_name = ?, tagline = ?, logo_url = ?, primary_color = ?, secondary_color = ?, updated_at = datetime('now') WHERE id = 1`;
+    
+    const result = await dbRun(updateQuery, [
+      siteName || 'Portfolio Website', 
+      tagline || 'Building Amazing Digital Experiences', 
+      logoUrl || '', 
+      colors?.primary || '#007AFF', 
+      colors?.secondary || '#5856D6'
+    ]);
+    
+    if (result.changes === 0) {
+      // No rows updated, try insert
+      const insertQuery = isPostgreSQL
+        ? `INSERT INTO site_config (id, site_name, tagline, logo_url, primary_color, secondary_color, updated_at) VALUES (1, $1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`
+        : `INSERT INTO site_config (id, site_name, tagline, logo_url, primary_color, secondary_color, updated_at) VALUES (1, ?, ?, ?, ?, ?, datetime('now'))`;
+      
+      await dbRun(insertQuery, [
+        siteName || 'Portfolio Website', 
+        tagline || 'Building Amazing Digital Experiences', 
+        logoUrl || '', 
+        colors?.primary || '#007AFF', 
+        colors?.secondary || '#5856D6'
+      ]);
+      console.log('Config inserted successfully');
+    } else {
+      console.log('Config updated successfully:', result.changes, 'rows affected');
     }
     
-    // Update with logo_url column
-    db.run(`UPDATE site_config SET site_name = ?, tagline = ?, logo_url = ?, primary_color = ?, secondary_color = ?, updated_at = datetime('now') WHERE id = 1`,
-      [siteName || 'Portfolio Website', tagline || 'Building Amazing Digital Experiences', logoUrl || '', colors?.primary || '#007AFF', colors?.secondary || '#5856D6'],
-      function(err) {
-        if (err) {
-          console.error('Database update error:', err);
-          return res.status(500).json({ error: 'Database update failed: ' + err.message });
-        }
-        
-        if (this.changes === 0) {
-          // No rows updated, try insert
-          db.run(`INSERT INTO site_config (id, site_name, tagline, logo_url, primary_color, secondary_color, updated_at) VALUES (1, ?, ?, ?, ?, ?, datetime('now'))`,
-            [siteName || 'Portfolio Website', tagline || 'Building Amazing Digital Experiences', logoUrl || '', colors?.primary || '#007AFF', colors?.secondary || '#5856D6'],
-            function(insertErr) {
-              if (insertErr) {
-                console.error('Database insert error:', insertErr);
-                return res.status(500).json({ error: 'Database insert failed: ' + insertErr.message });
-              }
-              console.log('Config inserted successfully');
-              res.json({ message: 'Configuration updated successfully' });
-            }
-          );
-        } else {
-          console.log('Config updated successfully:', this.changes, 'rows affected');
-          res.json({ message: 'Configuration updated successfully' });
-        }
-      }
-    );
-  });
+    res.json({ message: 'Configuration updated successfully' });
+  } catch (err) {
+    console.error('Database operation error:', err);
+    res.status(500).json({ error: 'Database operation failed: ' + err.message });
+  }
 });
 
 // Test endpoint to verify database operations
