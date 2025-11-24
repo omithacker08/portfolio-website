@@ -258,15 +258,19 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Auth
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
-  db.get('SELECT * FROM users WHERE email = ?', [email], (err, user) => {
-    if (err || !user || !bcrypt.compareSync(password, user.password)) {
+  try {
+    const user = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
+    if (!user || !bcrypt.compareSync(password, user.password)) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
-  });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Resume
@@ -334,24 +338,29 @@ app.put('/api/home', authenticateToken, async (req, res) => {
 });
 
 // Projects
-app.get('/api/projects', (req, res) => {
-  db.all('SELECT * FROM projects ORDER BY created_at DESC', (err, projects) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+app.get('/api/projects', async (req, res) => {
+  try {
+    const projects = await dbQuery('SELECT * FROM projects ORDER BY created_at DESC');
     res.json(projects);
-  });
+  } catch (err) {
+    console.error('Database error loading projects:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-app.post('/api/projects', authenticateToken, (req, res) => {
+app.post('/api/projects', authenticateToken, async (req, res) => {
   const { name, domain, technologies, problemStatement, solutionSummary, benefits, imageUrl, videoUrl } = req.body;
   if (!name || !domain || !technologies || !problemStatement) {
     return res.status(400).json({ error: 'Required fields missing' });
   }
-  db.run(`INSERT INTO projects (name, domain, technologies, problem_statement, solution_summary, benefits, image_url, video_url, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-    [name, domain, technologies, problemStatement, solutionSummary, benefits, imageUrl, videoUrl, req.user.id], 
-    function(err) {
-      if (err) return res.status(500).json({ error: 'Database error' });
-      res.json({ id: this.lastID, message: 'Project created successfully' });
-    });
+  try {
+    const result = await dbRun(`INSERT INTO projects (name, domain, technologies, problem_statement, solution_summary, benefits, image_url, video_url, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+      [name, domain, technologies, problemStatement, solutionSummary, benefits, imageUrl, videoUrl, req.user.id]);
+    res.json({ id: result.lastID, message: 'Project created successfully' });
+  } catch (err) {
+    console.error('Database error creating project:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 app.put('/api/projects/:id', authenticateToken, (req, res) => {
@@ -636,12 +645,15 @@ app.get('/api/about', (req, res) => {
 });
 
 // Users endpoint for admin
-app.get('/api/users', authenticateToken, (req, res) => {
+app.get('/api/users', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
-  db.all('SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC', (err, users) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+  try {
+    const users = await dbQuery('SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC');
     res.json(users);
-  });
+  } catch (err) {
+    console.error('Database error loading users:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 app.listen(PORT, () => {
