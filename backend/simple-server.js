@@ -228,7 +228,25 @@ const initializeDatabase = async () => {
       await db.query(`INSERT INTO site_config (id, site_name, tagline, primary_color, secondary_color) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING`, 
         [1, 'Portfolio Website', 'Building Amazing Digital Experiences', '#007AFF', '#5856D6']);
         
-      console.log('PostgreSQL database initialized');
+      // Insert sample blog data
+      await db.query(`INSERT INTO blogs (id, title, content, excerpt, tags, author_id, is_draft) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING`, 
+        [1, 'Test Blog Post', 'This is a test blog post to check if the like functionality works properly. It has enough content to meet the minimum requirements.', 'A test blog post', 'test,blog', 1, 0]);
+        
+      // Insert sample projects data
+      await db.query(`INSERT INTO projects (id, name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`, 
+        [1, 'Procure to Pay', 'ERP', 'Java, Struts framework, Javascript, CSS, HTML, Dojo, SQL', 'Procurement management system to manage the procurement life cycle of Large companies.', 'Procurement management system to manage the procurement life cycle of Large companies.', 'Procurement management system to manage the procurement life cycle of Large companies.', 1]);
+        
+      await db.query(`INSERT INTO projects (id, name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`, 
+        [2, 'Asset Management product', 'Web', 'Java, Spring framework, Javascript, CSS, SQL', 'Asset management need for enterprise integrated with Procurement and expense manangement systems', 'Asset management need for enterprise integrated with Procurement and expense manangement systems', '1. Easy-to-use UI for tracking expenses\n2. Account entries for Tally and other such tools\n3. Clear reporting and analytics\n4. Audit logs\n5. Customizable workflows\n6. Role-based approval system', 1]);
+        
+      await db.query(`INSERT INTO projects (id, name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`, 
+        [3, 'Expense Management System', 'ERP', 'Spring framework, Hibernate, SQL, Javascript', 'Large enterprises needed a way to track their expense that can not only help create expense data but also offer a way to integrate with third-party systems, generate account entries, generate audit logs, and offer a clear reporting and analytics.', 'This product was created for enterprises to manage their expenses in a better way. It provided a very customizable use-cases that can cater any type of requirement. Some of the key features are its reporting and analytics feature, Role-based approval system, customizable workflows and its easy-to-use UI.', '1. Easy to use UI for tracking expenses\n2. Account entries for Tally and other such tools\n3. Clear reporting and anaytics\n4. Audit logs\n5. Customizable workflows\n6. Role-based approval system', 1]);
+        
+      // Insert sample AI project data
+      await db.query(`INSERT INTO ai_projects (id, use_case, benefits, domain, cost, problem_statement, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING`, 
+        [1, 'Recommendation Engine', 'Recommendation engine for the sales team to contact customers with high probability of investing in the retirement funds', 'Finance', 'Low ($1K - $10K)', 'To increase the adoption of the Retireplus Product by the consumers and add more funds in it, Sales team needs some assistance where they can target the consumers who has high probability of investing the funds in it. There is a need of Recommendation engine which will help the team for the same.', 1]);
+        
+      console.log('PostgreSQL database initialized with sample data');
     } catch (error) {
       console.error('PostgreSQL initialization error:', error);
     }
