@@ -261,7 +261,8 @@ const authenticateToken = (req, res, next) => {
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
+    const query = isPostgreSQL ? 'SELECT * FROM users WHERE email = $1' : 'SELECT * FROM users WHERE email = ?';
+    const user = await dbGet(query, [email]);
     if (!user || !bcrypt.compareSync(password, user.password)) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
