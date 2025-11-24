@@ -10,7 +10,7 @@ const Auth = () => {
     name: '',
     email: '',
     password: '',
-    otp: '1234'
+    otp: ''
   });
   const [otpSent, setOtpSent] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -101,14 +101,14 @@ const Auth = () => {
 
               <div className="otp-section">
                 <div className="form-group">
-                  <label>OTP (Demo: any 4 digits)</label>
+                  <label>OTP</label>
                   <div className="otp-input-group">
                     <input
                       type="text"
                       name="otp"
                       value={formData.otp}
                       onChange={handleInputChange}
-                      placeholder="1234"
+                      placeholder="Enter OTP"
                       required
                     />
                     <button
@@ -140,7 +140,7 @@ const Auth = () => {
                   onClick={() => {
                     setIsLogin(!isLogin);
                     setOtpSent(true);
-                    setFormData({ name: '', email: '', password: '', otp: '1234' });
+                    setFormData({ name: '', email: '', password: '', otp: '' });
                   }}
                   className="switch-btn"
                 >
