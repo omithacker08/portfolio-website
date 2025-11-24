@@ -340,14 +340,19 @@ app.get('/api/resume/:userId', async (req, res) => {
   }
 });
 
-app.post('/api/resume', authenticateToken, (req, res) => {
+app.post('/api/resume', authenticateToken, async (req, res) => {
   const { name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, aiSkills } = req.body;
-  db.run(`INSERT OR REPLACE INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`, 
-    [req.user.id, name, profession, summary, email, phone, location, linkedin, website, JSON.stringify(education || []), JSON.stringify(experience || []), JSON.stringify(technologies || []), JSON.stringify(aiSkills || [])], 
-    (err) => {
-      if (err) return res.status(500).json({ error: 'Database error' });
-      res.json({ message: 'Resume updated successfully' });
-    });
+  try {
+    const query = isPostgreSQL 
+      ? `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP) ON CONFLICT (user_id) DO UPDATE SET name = $2, profession = $3, summary = $4, email = $5, phone = $6, location = $7, linkedin = $8, website = $9, education = $10, experience = $11, technologies = $12, ai_skills = $13, updated_at = CURRENT_TIMESTAMP`
+      : `INSERT OR REPLACE INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
+    
+    await dbRun(query, [req.user.id, name, profession, summary, email, phone, location, linkedin, website, JSON.stringify(education || []), JSON.stringify(experience || []), JSON.stringify(technologies || []), JSON.stringify(aiSkills || [])]);
+    res.json({ message: 'Resume updated successfully' });
+  } catch (err) {
+    console.error('Resume update error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Newsletter
@@ -712,6 +717,29 @@ app.get('/api/users', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Database error loading users:', err);
     res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Force resume update endpoint
+app.post('/api/force-resume-update', async (req, res) => {
+  try {
+    const deleteQuery = isPostgreSQL ? 'DELETE FROM resumes WHERE user_id = $1' : 'DELETE FROM resumes WHERE user_id = ?';
+    await dbRun(deleteQuery, [1]);
+    
+    const insertQuery = isPostgreSQL 
+      ? `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
+      : `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    
+    await dbRun(insertQuery, [1, 'Om Thacker', 'Full Stack Developer | Tech Lead | Certified AI Project Manager', 'Passionate full-stack developer with expertise in modern web technologies and AI solutions. 12+ years of experience, Completed Masters of Computer Applications from Mumbai university, currently working as a Tech Lead at TIAA. Worked on multiple domains like ERP, Healthcare, Finance throughout my career and implemented multiple enterprise grade solutions from scratch. Have experience of working as a Tech Lead, Project Manager and solution architect role.', 'omi.thacker08@gmail.com', '+91 9870915196', 'Mumbai, MH', 'https://linkedin.com/in/om-thacker', 'alexjohnson.dev', 
+      '[{"id":1,"degree":"Master of Computer Application","institution":"University of Mumbai","startDate":"2010-06-20","endDate":"2013-06-15","gpa":"","percentage":"68"},{"id":1761203677705,"degree":"Bachelor of Information Technology","institution":"University of Mumbai","startDate":"2007-06-12","endDate":"2010-06-15","gpa":"","percentage":"64.97"},{"id":1761203862957,"degree":"HSC","institution":"University of Mumbai","startDate":"2005-06-12","endDate":"2007-06-01","gpa":"","percentage":"60"},{"id":1761203863574,"degree":"SSC","institution":"University of Mumbai","startDate":"2004-06-01","endDate":"2005-06-01","gpa":"","percentage":"63"}]',
+      '[{"id":1,"company":"TIAA","position":"Senior Associate, Lead Cloud specialist","startDate":"2020-01-27","endDate":"","current":true,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies.\nLead the PI planning for the Team and work closely with Product Owner and Product Manager for end-to-end delivery plan and excution."},{"id":1761207963049,"company":"Citiustech","position":"Tech Lead","startDate":"2016-05-01","endDate":"2020-01-25","current":false,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies."},{"id":1761208169200,"company":"GlobeOp Finanacial Services","position":"Senior Associate","startDate":"2015-06-04","endDate":"2016-04-30","current":false,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies."},{"id":1761208221911,"company":"EclinicalWorks","position":"Senior Software Engineer","startDate":"2015-06-01","endDate":"2016-06-01","current":false,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies."},{"id":1761208282474,"company":"Expenzing | Nexstep","position":"Senior Software Engineer","startDate":"2013-02-04","endDate":"2015-05-31","current":false,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies."}]',
+      '[{"id":1,"name":"React","category":"Frontend","proficiency":"Expert","yearsOfExperience":"4"},{"id":1763804291838,"name":"Java","category":"Backend","proficiency":"Expert","yearsOfExperience":"12"},{"id":1763804312695,"name":"Spring framework","category":"Backend","proficiency":"Advanced","yearsOfExperience":"7"},{"id":1763804339259,"name":"SQL","category":"Database","proficiency":"Advanced","yearsOfExperience":"9.5"},{"id":1763804354601,"name":"Python","category":"Backend","proficiency":"Intermediate","yearsOfExperience":"2"}]',
+      '[{"id":1,"useCase":"Machine Learning Models","summary":"Developed predictive models for business analytics","technologies":"Python, TensorFlow, Scikit-learn","impact":"25% improvement in prediction accuracy"}]']);
+    
+    res.json({ message: 'Resume data force updated successfully' });
+  } catch (err) {
+    console.error('Force resume update error:', err);
+    res.status(500).json({ error: 'Force update failed: ' + err.message });
   }
 });
 
