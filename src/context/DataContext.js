@@ -329,7 +329,8 @@ export const DataProvider = ({ children }) => {
     try {
       console.log('Updating home content:', homeData);
       await ApiService.updateHomeContent(homeData);
-      setHomeContent(homeData); // Update local state
+      // Reload from database to ensure consistency
+      await loadHomeContent();
       toast.success('Home content updated successfully!');
     } catch (error) {
       console.error('Failed to update home content:', error);
