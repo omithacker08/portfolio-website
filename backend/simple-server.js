@@ -285,35 +285,7 @@ const initializeDatabase = async () => {
         
       console.log('PostgreSQL database initialized with sample data');
       
-      // Force sample data insertion on every startup
-      try {
-        await db.query(`INSERT INTO blogs (title, content, excerpt, tags, author_id, is_draft) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`, 
-          ['Test Blog Post', 'This is a test blog post to check if the like functionality works properly. It has enough content to meet the minimum requirements.', 'A test blog post', 'test,blog', 1, 0]);
-          
-        await db.query(`INSERT INTO projects (name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`, 
-          ['Procure to Pay', 'ERP', 'Java, Struts framework, Javascript, CSS, HTML, Dojo, SQL', 'Procurement management system to manage the procurement life cycle of Large companies.', 'Procurement management system to manage the procurement life cycle of Large companies.', 'Procurement management system to manage the procurement life cycle of Large companies.', 1]);
-          
-        await db.query(`INSERT INTO projects (name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`, 
-          ['Asset Management product', 'Web', 'Java, Spring framework, Javascript, CSS, SQL', 'Asset management need for enterprise integrated with Procurement and expense manangement systems', 'Asset management need for enterprise integrated with Procurement and expense manangement systems', '1. Easy-to-use UI\n2. Account entries for Tally\n3. Clear reporting and analytics\n4. Audit logs\n5. Customizable workflows\n6. Role-based approval system', 1]);
-          
-        await db.query(`INSERT INTO projects (name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`, 
-          ['Expense Management System', 'ERP', 'Spring framework, Hibernate, SQL, Javascript', 'Large enterprises needed a way to track their expense that can not only help create expense data but also offer a way to integrate with third-party systems, generate account entries, generate audit logs, and offer a clear reporting and analytics.', 'This product was created for enterprises to manage their expenses in a better way. It provided a very customizable use-cases that can cater any type of requirement.', '1. Easy to use UI for tracking expenses\n2. Account entries for Tally\n3. Clear reporting and anaytics\n4. Audit logs\n5. Customizable workflows\n6. Role-based approval system', 1]);
-          
-        await db.query(`INSERT INTO ai_projects (use_case, benefits, domain, cost, problem_statement, author_id) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`, 
-          ['Recommendation Engine', 'Recommendation engine for the sales team to contact customers with high probability of investing in the retirement funds', 'Finance', 'Low ($1K - $10K)', 'To increase the adoption of the Retireplus Product by the consumers and add more funds in it, Sales team needs some assistance where they can target the consumers who has high probability of investing the funds in it.', 1]);
-          
-        // Insert actual resume data
-        await db.query(`INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) ON CONFLICT (user_id) DO UPDATE SET name = $2, profession = $3, summary = $4, email = $5, phone = $6, location = $7, linkedin = $8, website = $9, education = $10, experience = $11, technologies = $12, ai_skills = $13`, 
-          [1, 'Om Thacker', 'Full Stack Developer | Tech Lead | Certified AI Project Manager', 'Passionate full-stack developer with expertise in modern web technologies and AI solutions. 12+ years of experience, Completed Masters of Computer Applications from Mumbai university, currently working as a Tech Lead at TIAA. Worked on multiple domains like ERP, Healthcare, Finance throughout my career and implemented multiple enterprise grade solutions from scratch. Have experience of working as a Tech Lead, Project Manager and solution architect role.', 'omi.thacker08@gmail.com', '+91 9870915196', 'Mumbai, MH', 'https://linkedin.com/in/om-thacker', 'alexjohnson.dev', 
-          '[{"id":1,"degree":"Master of Computer Application","institution":"University of Mumbai","startDate":"2010-06-20","endDate":"2013-06-15","gpa":"","percentage":"68"},{"id":1761203677705,"degree":"Bachelor of Information Technology","institution":"University of Mumbai","startDate":"2007-06-12","endDate":"2010-06-15","gpa":"","percentage":"64.97"},{"id":1761203862957,"degree":"HSC","institution":"University of Mumbai","startDate":"2005-06-12","endDate":"2007-06-01","gpa":"","percentage":"60"},{"id":1761203863574,"degree":"SSC","institution":"University of Mumbai","startDate":"2004-06-01","endDate":"2005-06-01","gpa":"","percentage":"63"}]',
-          '[{"id":1,"company":"TIAA","position":"Senior Associate, Lead Cloud specialist","startDate":"2020-01-27","endDate":"","current":true,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies.\nLead the PI planning for the Team and work closely with Product Owner and Product Manager for end-to-end delivery plan and excution."},{"id":1761207963049,"company":"Citiustech","position":"Tech Lead","startDate":"2016-05-01","endDate":"2020-01-25","current":false,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies."},{"id":1761208169200,"company":"GlobeOp Finanacial Services","position":"Senior Associate","startDate":"2015-06-04","endDate":"2016-04-30","current":false,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies."},{"id":1761208221911,"company":"EclinicalWorks","position":"Senior Software Engineer","startDate":"2015-06-01","endDate":"2016-06-01","current":false,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies."},{"id":1761208282474,"company":"Expenzing | Nexstep","position":"Senior Software Engineer","startDate":"2013-02-04","endDate":"2015-05-31","current":false,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies."}]',
-          '[{"id":1,"name":"React","category":"Frontend","proficiency":"Expert","yearsOfExperience":"4"},{"id":1763804291838,"name":"Java","category":"Backend","proficiency":"Expert","yearsOfExperience":"12"},{"id":1763804312695,"name":"Spring framework","category":"Backend","proficiency":"Advanced","yearsOfExperience":"7"},{"id":1763804339259,"name":"SQL","category":"Database","proficiency":"Advanced","yearsOfExperience":"9.5"},{"id":1763804354601,"name":"Python","category":"Backend","proficiency":"Intermediate","yearsOfExperience":"2"}]',
-          '[{"id":1,"useCase":"Machine Learning Models","summary":"Developed predictive models for business analytics","technologies":"Python, TensorFlow, Scikit-learn","impact":"25% improvement in prediction accuracy"}]']);
-          
-        console.log('Sample data inserted successfully');
-      } catch (sampleError) {
-        console.log('Sample data insertion (may already exist):', sampleError.message);
-      }
+      console.log('PostgreSQL database initialized successfully');
     } catch (error) {
       console.error('PostgreSQL initialization error:', error);
     }
@@ -963,43 +935,46 @@ app.get('/api/users', authenticateToken, async (req, res) => {
   }
 });
 
-// Force resume update endpoint
-app.post('/api/force-resume-update', async (req, res) => {
+// Database cleanup endpoint to remove duplicates
+app.post('/api/cleanup-duplicates', async (req, res) => {
   try {
-    // Simple direct update using the resume POST endpoint logic
-    const resumeData = {
-      name: 'Om Thacker',
-      profession: 'Full Stack Developer | Tech Lead | Certified AI Project Manager',
-      summary: 'Passionate full-stack developer with expertise in modern web technologies and AI solutions. 12+ years of experience, Completed Masters of Computer Applications from Mumbai university, currently working as a Tech Lead at TIAA. Worked on multiple domains like ERP, Healthcare, Finance throughout my career and implemented multiple enterprise grade solutions from scratch.',
-      email: 'omi.thacker08@gmail.com',
-      phone: '+91 9870915196',
-      location: 'Mumbai, MH',
-      linkedin: 'https://linkedin.com/in/om-thacker',
-      website: 'omthacker.dev',
-      education: [{"id":1,"degree":"Master of Computer Application","institution":"University of Mumbai","startDate":"2010-06-20","endDate":"2013-06-15","gpa":"","percentage":"68"},{"id":1761203677705,"degree":"Bachelor of Information Technology","institution":"University of Mumbai","startDate":"2007-06-12","endDate":"2010-06-15","gpa":"","percentage":"64.97"}],
-      experience: [{"id":1,"company":"TIAA","position":"Senior Associate, Lead Cloud specialist","startDate":"2020-01-27","endDate":"","current":true,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies."},{"id":1761207963049,"company":"Citiustech","position":"Tech Lead","startDate":"2016-05-01","endDate":"2020-01-25","current":false,"responsibilities":"Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies."}],
-      technologies: [{"id":1,"name":"React","category":"Frontend","proficiency":"Expert","yearsOfExperience":"4"},{"id":1763804291838,"name":"Java","category":"Backend","proficiency":"Expert","yearsOfExperience":"12"},{"id":1763804312695,"name":"Spring framework","category":"Backend","proficiency":"Advanced","yearsOfExperience":"7"}],
-      aiSkills: [{"id":1,"useCase":"Machine Learning Models","summary":"Developed predictive models for business analytics","technologies":"Python, TensorFlow, Scikit-learn","impact":"25% improvement in prediction accuracy"}]
-    };
+    console.log('Starting database cleanup...');
     
-    const updateQuery = isPostgreSQL 
-      ? `UPDATE resumes SET name = $2, profession = $3, summary = $4, email = $5, phone = $6, location = $7, linkedin = $8, website = $9, education = $10, experience = $11, technologies = $12, ai_skills = $13, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1`
-      : `UPDATE resumes SET name = ?, profession = ?, summary = ?, email = ?, phone = ?, location = ?, linkedin = ?, website = ?, education = ?, experience = ?, technologies = ?, ai_skills = ?, updated_at = datetime('now') WHERE user_id = ?`;
+    // Keep only the latest 3 unique projects (by name)
+    await dbQuery(`
+      DELETE FROM projects 
+      WHERE id NOT IN (
+        SELECT DISTINCT ON (name) id 
+        FROM projects 
+        ORDER BY name, created_at DESC
+      )
+    `);
     
-    const result = await dbRun(updateQuery, [1, resumeData.name, resumeData.profession, resumeData.summary, resumeData.email, resumeData.phone, resumeData.location, resumeData.linkedin, resumeData.website, JSON.stringify(resumeData.education), JSON.stringify(resumeData.experience), JSON.stringify(resumeData.technologies), JSON.stringify(resumeData.aiSkills)]);
+    // Keep only the latest unique AI project (by use_case)
+    await dbQuery(`
+      DELETE FROM ai_projects 
+      WHERE id NOT IN (
+        SELECT DISTINCT ON (use_case) id 
+        FROM ai_projects 
+        ORDER BY use_case, created_at DESC
+      )
+    `);
     
-    if (result.changes === 0) {
-      const insertQuery = isPostgreSQL 
-        ? `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP)`
-        : `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
-      
-      await dbRun(insertQuery, [1, resumeData.name, resumeData.profession, resumeData.summary, resumeData.email, resumeData.phone, resumeData.location, resumeData.linkedin, resumeData.website, JSON.stringify(resumeData.education), JSON.stringify(resumeData.experience), JSON.stringify(resumeData.technologies), JSON.stringify(resumeData.aiSkills)]);
-    }
+    // Keep only the latest unique blog (by title)
+    await dbQuery(`
+      DELETE FROM blogs 
+      WHERE id NOT IN (
+        SELECT DISTINCT ON (title) id 
+        FROM blogs 
+        ORDER BY title, created_at DESC
+      )
+    `);
     
-    res.json({ message: 'Resume data force updated successfully' });
+    console.log('Database cleanup completed');
+    res.json({ message: 'Database cleanup completed successfully' });
   } catch (err) {
-    console.error('Force resume update error:', err);
-    res.status(500).json({ error: 'Force update failed: ' + err.message });
+    console.error('Database cleanup error:', err);
+    res.status(500).json({ error: 'Cleanup failed: ' + err.message });
   }
 });
 
