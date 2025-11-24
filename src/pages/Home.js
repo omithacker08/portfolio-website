@@ -22,18 +22,16 @@ const Home = () => {
                 {homeContent?.hero_subtitle || 'Full-stack developer passionate about creating innovative solutions with modern technologies. Currently crafting amazing web applications and AI-powered tools.'}
               </p>
               <div className="hero-stats">
-                <div className="stat">
-                  <span className="stat-number">50+</span>
-                  <span className="stat-label">Projects Built</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-number">3+</span>
-                  <span className="stat-label">Years Experience</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-number">15+</span>
-                  <span className="stat-label">Happy Clients</span>
-                </div>
+                {(homeContent?.hero_stats || [
+                  { number: '50+', label: 'Projects Built' },
+                  { number: '3+', label: 'Years Experience' },
+                  { number: '15+', label: 'Happy Clients' }
+                ]).map((stat, index) => (
+                  <div key={index} className="stat">
+                    <span className="stat-number">{stat.number}</span>
+                    <span className="stat-label">{stat.label}</span>
+                  </div>
+                ))}
               </div>
               <div className="hero-actions">
                 <Link to="/projects" className="btn btn-primary">
