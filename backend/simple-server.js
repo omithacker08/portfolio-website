@@ -337,12 +337,24 @@ app.get('/api/resume/:userId', async (req, res) => {
     const query = isPostgreSQL ? 'SELECT * FROM resumes WHERE user_id = $1' : 'SELECT * FROM resumes WHERE user_id = ?';
     const resume = await dbGet(query, [req.params.userId]);
     if (resume) {
-      resume.education = JSON.parse(resume.education || '[]');
-      resume.experience = JSON.parse(resume.experience || '[]');
-      resume.technologies = JSON.parse(resume.technologies || '[]');
-      resume.skills = JSON.parse(resume.technologies || '[]');
-      resume.aiSkills = JSON.parse(resume.ai_skills || '[]');
-      resume.achievements = JSON.parse(resume.ai_skills || '[]');
+      const safeJsonParse = (data, fallback = []) => {
+        if (!data) return fallback;
+        if (typeof data === 'object') return data;
+        if (typeof data === 'string' && data.startsWith('[object')) return fallback;
+        try {
+          return JSON.parse(data);
+        } catch (e) {
+          console.error('JSON parse error:', e.message, 'Data:', data);
+          return fallback;
+        }
+      };
+      
+      resume.education = safeJsonParse(resume.education, []);
+      resume.experience = safeJsonParse(resume.experience, []);
+      resume.technologies = safeJsonParse(resume.technologies, []);
+      resume.skills = safeJsonParse(resume.technologies, []);
+      resume.aiSkills = safeJsonParse(resume.ai_skills, []);
+      resume.achievements = safeJsonParse(resume.ai_skills, []);
       resume.title = resume.profession;
     }
     res.json(resume || {});
@@ -517,13 +529,25 @@ app.post('/api/resume', authenticateToken, async (req, res) => {
   const finalTitle = title || profession;
   const finalSkills = skills || technologies || [];
   const finalAchievements = achievements || aiSkills || [];
+  
+  const safeStringify = (data) => {
+    if (!data) return '[]';
+    if (typeof data === 'string') return data;
+    try {
+      return JSON.stringify(data);
+    } catch (e) {
+      console.error('JSON stringify error:', e.message);
+      return '[]';
+    }
+  };
+  
   try {
     // First try to update existing record
     const updateQuery = isPostgreSQL 
       ? `UPDATE resumes SET name = $2, profession = $3, summary = $4, email = $5, phone = $6, location = $7, linkedin = $8, website = $9, education = $10, experience = $11, technologies = $12, ai_skills = $13, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1`
       : `UPDATE resumes SET name = ?, profession = ?, summary = ?, email = ?, phone = ?, location = ?, linkedin = ?, website = ?, education = ?, experience = ?, technologies = ?, ai_skills = ?, updated_at = datetime('now') WHERE user_id = ?`;
     
-    const result = await dbRun(updateQuery, [req.user.id, name, finalTitle, summary, email, phone, location, linkedin, website, JSON.stringify(education || []), JSON.stringify(experience || []), JSON.stringify(finalSkills), JSON.stringify(finalAchievements)]);
+    const result = await dbRun(updateQuery, [req.user.id, name, finalTitle, summary, email, phone, location, linkedin, website, safeStringify(education), safeStringify(experience), safeStringify(finalSkills), safeStringify(finalAchievements)]);
     
     // If no rows were updated, insert new record
     if (result.changes === 0) {
@@ -531,7 +555,7 @@ app.post('/api/resume', authenticateToken, async (req, res) => {
         ? `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP)`
         : `INSERT INTO resumes (user_id, name, profession, summary, email, phone, location, linkedin, website, education, experience, technologies, ai_skills, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
       
-      await dbRun(insertQuery, [req.user.id, name, finalTitle, summary, email, phone, location, linkedin, website, JSON.stringify(education || []), JSON.stringify(experience || []), JSON.stringify(finalSkills), JSON.stringify(finalAchievements)]);
+      await dbRun(insertQuery, [req.user.id, name, finalTitle, summary, email, phone, location, linkedin, website, safeStringify(education), safeStringify(experience), safeStringify(finalSkills), safeStringify(finalAchievements)]);
     }
     
     res.json({ message: 'Resume updated successfully' });
