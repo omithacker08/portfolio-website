@@ -723,11 +723,11 @@ app.post('/api/blogs', authenticateToken, async (req, res) => {
     const query = isPostgreSQL 
       ? `INSERT INTO blogs (title, content, excerpt, tags, image_url, author_id, is_draft) VALUES ($1, $2, $3, $4, $5, $6, $7)`
       : `INSERT INTO blogs (title, content, excerpt, tags, image_url, author_id, is_draft) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-    const result = await dbRun(query, [title, content, excerpt, tags, imageUrl, req.user.id, isDraft || 0]);
+    const result = await dbRun(query, [title, content, excerpt, tags, imageUrl, req.user.id, isDraft ? 1 : 0]);
     res.json({ id: result.lastID, message: 'Blog created successfully' });
   } catch (err) {
     console.error('Database error creating blog:', err);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: 'Database error: ' + err.message });
   }
 });
 
