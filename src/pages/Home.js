@@ -121,7 +121,7 @@ const Home = () => {
                   </div>
                   <div className="code-line">
                     <span className="code-property">  name:</span> 
-                    <span className="code-string">'John Doe'</span>,
+                    <span className="code-string">'Om Thacker'</span>,
                   </div>
                   <div className="code-line">
                     <span className="code-property">  skills:</span> 

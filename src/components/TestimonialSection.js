@@ -7,7 +7,7 @@ const TestimonialSection = ({ testimonials = [] }) => {
 
   const defaultTestimonials = [
     {
-      name: 'Sarah Johnson',
+      name: 'Client Testimonial',
       role: 'Product Manager',
       company: 'TechCorp',
       content: 'Outstanding developer with exceptional problem-solving skills. Delivered our project ahead of schedule with remarkable quality.',
@@ -15,7 +15,7 @@ const TestimonialSection = ({ testimonials = [] }) => {
       avatar: '👩‍💼'
     },
     {
-      name: 'Michael Chen',
+      name: 'Team Member',
       role: 'CTO',
       company: 'StartupXYZ',
       content: 'Incredible technical expertise and great communication. Made complex AI solutions accessible to our entire team.',
@@ -23,7 +23,7 @@ const TestimonialSection = ({ testimonials = [] }) => {
       avatar: '👨‍💻'
     },
     {
-      name: 'Emily Rodriguez',
+      name: 'Project Manager',
       role: 'Design Lead',
       company: 'Creative Agency',
       content: 'Perfect collaboration between design and development. Brought our vision to life with pixel-perfect implementation.',
@@ -71,8 +71,8 @@ const TestimonialSection = ({ testimonials = [] }) => {
   return (
     <div className="testimonial-section">
       <div className="testimonial-header">
-        <h3>What People Say</h3>
-        <p>Feedback from clients and colleagues I've worked with</p>
+        <h3>Professional Feedback</h3>
+        <p>Testimonials from collaborative projects and professional relationships</p>
       </div>
 
       <div className="testimonial-carousel">

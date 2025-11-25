@@ -39,10 +39,10 @@ const Header = () => {
         <div className="header-content">
           <Link to="/" className="logo">
             <div className="logo-avatar">
-              <span>JD</span>
+              <span>OT</span>
             </div>
             <div className="logo-info">
-              <span className="logo-name">{siteConfig?.site_name || 'John Doe'}</span>
+              <span className="logo-name">{siteConfig?.site_name || 'Om Thacker'}</span>
               <span className="logo-title">{siteConfig?.tagline || 'Full Stack Developer'}</span>
             </div>
           </Link>

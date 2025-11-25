@@ -38,7 +38,7 @@ const Admin = () => {
     technicalSkills: []
   });
   const [homeForm, setHomeForm] = useState({
-    heroName: 'Alex Johnson',
+    heroName: 'Om Thacker',
     heroTitle: 'I build digital experiences that matter',
     heroSubtitle: 'Full-stack developer passionate about creating innovative solutions with modern technologies.',
     heroStats: [
@@ -49,7 +49,7 @@ const Admin = () => {
     aboutPreview: 'I\'m a passionate full-stack developer with a love for creating beautiful, functional, and user-friendly applications.',
     ctaTitle: 'Let\'s work together',
     ctaSubtitle: 'I\'m always interested in hearing about new projects and opportunities.',
-    profileName: 'John Doe',
+    profileName: 'Om Thacker',
     profileStatus: 'Available for freelance',
     profileTechStack: 'React, Node.js, Python'
   });
@@ -176,7 +176,7 @@ const Admin = () => {
       };
 
       setHomeForm({
-        heroName: homeContent.hero_name || 'Alex Johnson',
+        heroName: homeContent.hero_name || 'Om Thacker',
         heroTitle: homeContent.hero_title || 'I build digital experiences that matter',
         heroSubtitle: homeContent.hero_subtitle || 'Full-stack developer passionate about creating innovative solutions with modern technologies.',
         heroStats: typeof homeContent.hero_stats === 'string' && homeContent.hero_stats.startsWith('[') 
@@ -189,7 +189,7 @@ const Admin = () => {
         aboutPreview: homeContent.about_preview || 'I\'m a passionate full-stack developer with a love for creating beautiful, functional, and user-friendly applications.',
         ctaTitle: homeContent.cta_title || 'Let\'s work together',
         ctaSubtitle: homeContent.cta_subtitle || 'I\'m always interested in hearing about new projects and opportunities.',
-        profileName: homeContent.profile_name || 'John Doe',
+        profileName: homeContent.profile_name || 'Om Thacker',
         profileStatus: homeContent.profile_status || 'Available for freelance',
         profileTechStack: homeContent.profile_tech_stack || 'React, Node.js, Python'
       });
@@ -947,7 +947,7 @@ const Admin = () => {
                       name="heroName"
                       value={homeForm.heroName}
                       onChange={handleHomeChange}
-                      placeholder="Alex Johnson"
+                      placeholder="Om Thacker"
                     />
                   </div>
                   <div className="form-group">
@@ -981,7 +981,7 @@ const Admin = () => {
                       name="profileName"
                       value={homeForm.profileName || ''}
                       onChange={handleHomeChange}
-                      placeholder="John Doe"
+                      placeholder="Om Thacker"
                     />
                   </div>
                   <div className="form-group">
