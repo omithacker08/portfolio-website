@@ -253,6 +253,16 @@ const initializeDatabase = async () => {
         UNIQUE(blog_id, user_id)
       )`);
       
+      await db.query(`CREATE TABLE IF NOT EXISTS about_content (
+        id INTEGER PRIMARY KEY,
+        job_title TEXT DEFAULT 'Professional Developer',
+        job_icon TEXT DEFAULT '💻',
+        who_i_am TEXT,
+        what_i_do TEXT,
+        technical_skills TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
       console.log('PostgreSQL database tables initialized (no data insertion)');
     } catch (error) {
       console.error('PostgreSQL initialization error:', error);
@@ -381,6 +391,16 @@ const initializeDatabase = async () => {
         user_id INTEGER NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(blog_id, user_id)
+      )`);
+      
+      db.run(`CREATE TABLE IF NOT EXISTS about_content (
+        id INTEGER PRIMARY KEY,
+        job_title TEXT DEFAULT 'Professional Developer',
+        job_icon TEXT DEFAULT '💻',
+        who_i_am TEXT,
+        what_i_do TEXT,
+        technical_skills TEXT,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`);
       
       console.log('SQLite database tables initialized (no data insertion)');
@@ -690,6 +710,33 @@ app.post('/api/blogs', authenticateToken, async (req, res) => {
   }
 });
 
+app.put('/api/blogs/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+  const { title, content, excerpt, tags, imageUrl, isDraft } = req.body;
+  try {
+    const query = isPostgreSQL 
+      ? `UPDATE blogs SET title = $1, content = $2, excerpt = $3, tags = $4, image_url = $5, is_draft = $6 WHERE id = $7`
+      : `UPDATE blogs SET title = ?, content = ?, excerpt = ?, tags = ?, image_url = ?, is_draft = ? WHERE id = ?`;
+    await dbRun(query, [title, content, excerpt, tags, imageUrl, isDraft ? 1 : 0, req.params.id]);
+    res.json({ message: 'Blog updated successfully' });
+  } catch (err) {
+    console.error('Database error updating blog:', err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
+  }
+});
+
+app.delete('/api/blogs/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+  try {
+    const query = isPostgreSQL ? 'DELETE FROM blogs WHERE id = $1' : 'DELETE FROM blogs WHERE id = ?';
+    await dbRun(query, [req.params.id]);
+    res.json({ message: 'Blog deleted successfully' });
+  } catch (err) {
+    console.error('Database error deleting blog:', err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
+  }
+});
+
 // Blog Comments
 app.get('/api/blogs/:id/comments', async (req, res) => {
   try {
@@ -927,15 +974,57 @@ app.get('/api/config/test', (req, res) => {
   });
 });
 
-// About Content (basic)
-app.get('/api/about', (req, res) => {
-  res.json({
-    job_title: 'Professional Developer',
-    job_icon: '💻',
-    who_i_am: 'Passionate developer with expertise in modern technologies',
-    what_i_do: 'Building innovative solutions and user-friendly applications',
-    technical_skills: []
-  });
+// About Content
+app.get('/api/about', async (req, res) => {
+  try {
+    const about = await dbGet('SELECT * FROM about_content WHERE id = 1');
+    if (about) {
+      res.json(about);
+    } else {
+      res.json({
+        job_title: 'Professional Developer',
+        job_icon: '💻',
+        who_i_am: 'Passionate developer with expertise in modern technologies',
+        what_i_do: 'Building innovative solutions and user-friendly applications',
+        technical_skills: []
+      });
+    }
+  } catch (err) {
+    console.error('Database error loading about content:', err);
+    res.json({
+      job_title: 'Professional Developer',
+      job_icon: '💻',
+      who_i_am: 'Passionate developer with expertise in modern technologies',
+      what_i_do: 'Building innovative solutions and user-friendly applications',
+      technical_skills: []
+    });
+  }
+});
+
+app.put('/api/about', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+  const { jobTitle, jobIcon, whoIAm, whatIDo, technicalSkills } = req.body;
+  
+  try {
+    const updateQuery = isPostgreSQL 
+      ? `UPDATE about_content SET job_title = $1, job_icon = $2, who_i_am = $3, what_i_do = $4, technical_skills = $5, updated_at = CURRENT_TIMESTAMP WHERE id = 1`
+      : `UPDATE about_content SET job_title = ?, job_icon = ?, who_i_am = ?, what_i_do = ?, technical_skills = ?, updated_at = datetime('now') WHERE id = 1`;
+    
+    const result = await dbRun(updateQuery, [jobTitle, jobIcon, whoIAm, whatIDo, JSON.stringify(technicalSkills || [])]);
+    
+    if (result.changes === 0) {
+      const insertQuery = isPostgreSQL
+        ? `INSERT INTO about_content (id, job_title, job_icon, who_i_am, what_i_do, technical_skills, updated_at) VALUES (1, $1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`
+        : `INSERT INTO about_content (id, job_title, job_icon, who_i_am, what_i_do, technical_skills, updated_at) VALUES (1, ?, ?, ?, ?, ?, datetime('now'))`;
+      
+      await dbRun(insertQuery, [jobTitle, jobIcon, whoIAm, whatIDo, JSON.stringify(technicalSkills || [])]);
+    }
+    
+    res.json({ message: 'About content updated successfully' });
+  } catch (err) {
+    console.error('Database error updating about content:', err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
+  }
 });
 
 // Users endpoint for admin

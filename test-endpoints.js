@@ -370,8 +370,24 @@ const testAboutContent = async () => {
     addResult('GET /about', 'FAIL', getResult.error);
   }
   
-  // Note: About content update endpoint doesn't exist in backend
-  addResult('PUT /about', 'SKIP', 'Endpoint not implemented in backend');
+  // PUT about content
+  const aboutData = {
+    jobTitle: 'Test Developer',
+    jobIcon: '🚀',
+    whoIAm: 'Test bio content',
+    whatIDo: 'Building test applications',
+    technicalSkills: ['JavaScript', 'React']
+  };
+  
+  const updateResult = await apiCall('PUT', '/about', aboutData, {
+    'Authorization': `Bearer ${authToken}`
+  });
+  if (updateResult.success) {
+    addResult('PUT /about', 'PASS', 'About content updated');
+  } else {
+    const errorMsg = typeof updateResult.error === 'object' ? JSON.stringify(updateResult.error) : updateResult.error;
+    addResult('PUT /about', 'FAIL', errorMsg);
+  }
 };
 
 // Main test runner

@@ -14,7 +14,7 @@ NC='\033[0m'
 LOCAL_COMMIT=$(git rev-parse HEAD)
 LOCAL_SHORT=$(git rev-parse --short HEAD)
 
-echo -e "${BLUE}Local latest commit:${NC} $LOCAL_SHORT"
+echo -e "${BLUE}Latest commit (should be in Render):${NC} $LOCAL_SHORT"
 echo ""
 
 # Check if backend has a version endpoint that shows commit
@@ -35,7 +35,7 @@ echo -e "${BLUE}Manual checks:${NC}"
 echo "1. Go to Render Dashboard: https://dashboard.render.com"
 echo "2. Find service: portfolio-backend-qxhg"  
 echo "3. Check 'Events' tab for latest deployment"
-echo "4. Look for commit hash: $LOCAL_SHORT"
+echo "4. Look for commit hash: $LOCAL_SHORT (e0de83d6)"
 echo ""
 echo -e "${YELLOW}If not deployed:${NC}"
 echo "- Click 'Manual Deploy' → 'Deploy latest commit'"
