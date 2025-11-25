@@ -14,24 +14,15 @@ const Home = () => {
         <div className="container">
           <div className="hero-content">
             <div className="hero-text">
-              <div className="hero-greeting">👋 Hi, I'm {homeContent?.hero_name || 'John Doe'}</div>
+              <div className="hero-greeting">👋 Hi, I'm {homeContent?.hero_name}</div>
               <h1 className="hero-title">
-                {homeContent?.hero_title || 'I build digital experiences that matter'}
+                {homeContent?.hero_title}
               </h1>
               <p className="hero-subtitle">
-                {homeContent?.hero_subtitle || 'Full-stack developer passionate about creating innovative solutions with modern technologies.'}
+                {homeContent?.hero_subtitle}
               </p>
               <div className="hero-stats">
-                {homeContent?.hero_stats ? homeContent.hero_stats.map((stat, index) => (
-                  <div key={index} className="stat">
-                    <span className="stat-number">{stat.number}</span>
-                    <span className="stat-label">{stat.label}</span>
-                  </div>
-                )) : [
-                  { number: '50+', label: 'Projects Built' },
-                  { number: '3+', label: 'Years Experience' },
-                  { number: '15+', label: 'Happy Clients' }
-                ].map((stat, index) => (
+                {homeContent?.hero_stats && homeContent.hero_stats.map((stat, index) => (
                   <div key={index} className="stat">
                     <span className="stat-number">{stat.number}</span>
                     <span className="stat-label">{stat.label}</span>
@@ -51,7 +42,7 @@ const Home = () => {
               <div className="profile-card">
                 <div className="profile-image">
                   <div className="avatar">
-                    {(homeContent?.profile_name || 'John Doe')
+                    {homeContent?.profile_name && homeContent.profile_name
                       .split(' ')
                       .map(name => name[0])
                       .join('')
@@ -61,10 +52,10 @@ const Home = () => {
                   <div className="status-indicator"></div>
                 </div>
                 <div className="profile-info">
-                  <h3>{homeContent?.profile_name || 'John Doe'}</h3>
-                  <p>{homeContent?.profile_status || 'Available for freelance'}</p>
+                  <h3>{homeContent?.profile_name}</h3>
+                  <p>{homeContent?.profile_status}</p>
                   <div className="tech-stack">
-                    {(homeContent?.profile_tech_stack || 'React, Node.js, Python')
+                    {homeContent?.profile_tech_stack && homeContent.profile_tech_stack
                       .split(',')
                       .map((tech, index) => (
                         <span key={index}>{tech.trim()}</span>
@@ -194,10 +185,10 @@ const Home = () => {
           </div>
 
           <div className="blog-grid">
-            {blogs.filter(blog => blog.approved).slice(0, 2).map((blog) => (
+            {blogs.filter(blog => !blog.is_draft).slice(0, 2).map((blog) => (
               <article key={blog.id} className="blog-card">
                 <div className="blog-meta">
-                  <time>{new Date(blog.createdAt).toLocaleDateString('en-US', { 
+                  <time>{new Date(blog.created_at).toLocaleDateString('en-US', { 
                     month: 'short', 
                     day: 'numeric',
                     year: 'numeric'

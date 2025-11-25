@@ -118,10 +118,10 @@ const dbRun = async (query, params = [], retries = 3) => {
   }
 };
 
-// Initialize database
+// Initialize database tables only (no data insertion)
 const initializeDatabase = async () => {
   if (process.env.DATABASE_URL) {
-    // PostgreSQL initialization
+    // PostgreSQL table creation only
     try {
       await db.query(`CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -246,53 +246,137 @@ const initializeDatabase = async () => {
         UNIQUE(blog_id, user_id)
       )`);
       
-      // Insert admin user
-      const adminPassword = bcrypt.hashSync('admin123', 10);
-      await db.query(`INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING`, 
-        ['Admin', 'admin@example.com', adminPassword, 'admin']);
-      
-      // Insert home content
-      await db.query(`INSERT INTO home_content (id, hero_name, hero_title, hero_subtitle, hero_stats, about_preview, cta_title, cta_subtitle, profile_name, profile_status, profile_tech_stack) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT (id) DO UPDATE SET hero_name = $2, hero_title = $3, profile_name = $9, profile_status = $10, profile_tech_stack = $11`, 
-        [1, 'Om Thacker', 'I build Software solutions that matter', 'Full-stack developer passionate about creating innovative solutions with modern technologies.', 
-        '[{"number":"50+","label":"Projects Built"},{"number":"12+","label":"Years Experience"},{"number":"25+","label":"Happy Clients"}]', 
-        'I am a passionate full-stack developer with a love for creating beautiful, functional, and user-friendly applications.', 
-        'Let us work together', 
-        'I am always interested in hearing about new projects and opportunities.',
-        'Om Thacker', 'Available for freelance', 'React, Node.js, Python, Java, Spring Boot'
-        ]);
-        
-      // Insert site config
-      await db.query(`INSERT INTO site_config (id, site_name, tagline, primary_color, secondary_color) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING`, 
-        [1, 'Portfolio Website', 'Building Amazing Digital Experiences', '#007AFF', '#5856D6']);
-        
-      // Insert sample blog data
-      await db.query(`INSERT INTO blogs (id, title, content, excerpt, tags, author_id, is_draft) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING`, 
-        [1, 'Test Blog Post', 'This is a test blog post to check if the like functionality works properly. It has enough content to meet the minimum requirements.', 'A test blog post', 'test,blog', 1, 0]);
-        
-      // Insert sample projects data
-      await db.query(`INSERT INTO projects (id, name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`, 
-        [1, 'Procure to Pay', 'ERP', 'Java, Struts framework, Javascript, CSS, HTML, Dojo, SQL', 'Procurement management system to manage the procurement life cycle of Large companies.', 'Procurement management system to manage the procurement life cycle of Large companies.', 'Procurement management system to manage the procurement life cycle of Large companies.', 1]);
-        
-      await db.query(`INSERT INTO projects (id, name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`, 
-        [2, 'Asset Management product', 'Web', 'Java, Spring framework, Javascript, CSS, SQL', 'Asset management need for enterprise integrated with Procurement and expense manangement systems', 'Asset management need for enterprise integrated with Procurement and expense manangement systems', '1. Easy-to-use UI for tracking expenses\n2. Account entries for Tally and other such tools\n3. Clear reporting and analytics\n4. Audit logs\n5. Customizable workflows\n6. Role-based approval system', 1]);
-        
-      await db.query(`INSERT INTO projects (id, name, domain, technologies, problem_statement, solution_summary, benefits, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`, 
-        [3, 'Expense Management System', 'ERP', 'Spring framework, Hibernate, SQL, Javascript', 'Large enterprises needed a way to track their expense that can not only help create expense data but also offer a way to integrate with third-party systems, generate account entries, generate audit logs, and offer a clear reporting and analytics.', 'This product was created for enterprises to manage their expenses in a better way. It provided a very customizable use-cases that can cater any type of requirement. Some of the key features are its reporting and analytics feature, Role-based approval system, customizable workflows and its easy-to-use UI.', '1. Easy to use UI for tracking expenses\n2. Account entries for Tally and other such tools\n3. Clear reporting and anaytics\n4. Audit logs\n5. Customizable workflows\n6. Role-based approval system', 1]);
-        
-      // Insert sample AI project data
-      await db.query(`INSERT INTO ai_projects (id, use_case, benefits, domain, cost, problem_statement, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING`, 
-        [1, 'Recommendation Engine', 'Recommendation engine for the sales team to contact customers with high probability of investing in the retirement funds', 'Finance', 'Low ($1K - $10K)', 'To increase the adoption of the Retireplus Product by the consumers and add more funds in it, Sales team needs some assistance where they can target the consumers who has high probability of investing the funds in it. There is a need of Recommendation engine which will help the team for the same.', 1]);
-        
-      console.log('PostgreSQL database initialized with sample data');
-      
-      console.log('PostgreSQL database initialized successfully');
+      console.log('PostgreSQL database tables initialized (no data insertion)');
     } catch (error) {
       console.error('PostgreSQL initialization error:', error);
     }
   } else {
-    // SQLite initialization (keep original code)
+    // SQLite table creation only
     db.serialize(() => {
-      // Original SQLite code here
+      db.run(`CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT DEFAULT 'user',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      db.run(`CREATE TABLE IF NOT EXISTS home_content (
+        id INTEGER PRIMARY KEY,
+        hero_name TEXT DEFAULT 'Om Thacker',
+        hero_title TEXT DEFAULT 'I build Software solutions that matter',
+        hero_subtitle TEXT,
+        hero_stats TEXT,
+        about_preview TEXT,
+        cta_title TEXT DEFAULT 'Let us work together',
+        cta_subtitle TEXT,
+        profile_name TEXT DEFAULT 'Om Thacker',
+        profile_status TEXT DEFAULT 'Available for freelance',
+        profile_tech_stack TEXT DEFAULT 'React, Node.js, Python, Java, Spring Boot',
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      db.run(`CREATE TABLE IF NOT EXISTS site_config (
+        id INTEGER PRIMARY KEY,
+        site_name TEXT DEFAULT 'Portfolio Website',
+        tagline TEXT DEFAULT 'Building Amazing Digital Experiences',
+        logo_url TEXT,
+        primary_color TEXT DEFAULT '#007AFF',
+        secondary_color TEXT DEFAULT '#5856D6',
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      db.run(`CREATE TABLE IF NOT EXISTS blogs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        excerpt TEXT,
+        tags TEXT,
+        image_url TEXT,
+        author_id INTEGER,
+        is_draft INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      db.run(`CREATE TABLE IF NOT EXISTS projects (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        domain TEXT NOT NULL,
+        technologies TEXT NOT NULL,
+        problem_statement TEXT NOT NULL,
+        solution_summary TEXT,
+        benefits TEXT,
+        image_url TEXT,
+        video_url TEXT,
+        author_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      db.run(`CREATE TABLE IF NOT EXISTS ai_projects (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        use_case TEXT NOT NULL,
+        benefits TEXT NOT NULL,
+        domain TEXT NOT NULL,
+        cost TEXT,
+        problem_statement TEXT NOT NULL,
+        author_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      db.run(`CREATE TABLE IF NOT EXISTS resumes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        name TEXT,
+        profession TEXT,
+        summary TEXT,
+        email TEXT,
+        phone TEXT,
+        location TEXT,
+        linkedin TEXT,
+        website TEXT,
+        education TEXT,
+        experience TEXT,
+        technologies TEXT,
+        ai_skills TEXT,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      db.run(`CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        name TEXT,
+        subscribed INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      db.run(`CREATE TABLE IF NOT EXISTS contact_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        message TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      db.run(`CREATE TABLE IF NOT EXISTS blog_comments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        blog_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        approved INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
+      db.run(`CREATE TABLE IF NOT EXISTS blog_likes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        blog_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(blog_id, user_id)
+      )`);
+      
+      console.log('SQLite database tables initialized (no data insertion)');
     });
   }
 };
@@ -360,167 +444,7 @@ app.get('/api/resume/:userId', async (req, res) => {
     res.json(resume || {});
   } catch (err) {
     console.error('Database error loading resume:', err);
-    // Return complete fallback data from local database
-    res.json({
-      name: 'Om Thacker',
-      title: 'Full Stack Developer | Tech Lead | Certified AI Project Manager',
-      summary: 'Passionate full-stack developer with expertise in modern web technologies and AI solutions. 12+ years of experience, Completed Masters of Computer Applications from Mumbai university, currently working as a Tech Lead at TIAA. Worked on multiple domains like ERP, Healthcare, Finance throughout my career and implemented multiple enterprise grade solutions from scratch. Have experience of working as a Tech Lead, Project Manager and solution architect role.',
-      email: 'omi.thacker08@gmail.com',
-      phone: '+91 9870915196',
-      location: 'Mumbai, MH',
-      linkedin: 'https://linkedin.com/in/om-thacker',
-      website: 'alexjohnson.dev',
-      education: [{
-        id: 1,
-        degree: 'Master of Computer Application',
-        institution: 'University of Mumbai',
-        startDate: '2010-06-20',
-        endDate: '2013-06-15',
-        gpa: '',
-        percentage: '68'
-      }, {
-        id: 1761203677705,
-        degree: 'Bachelor of Information Technology',
-        institution: 'University of Mumbai',
-        startDate: '2007-06-12',
-        endDate: '2010-06-15',
-        gpa: '',
-        percentage: '64.97'
-      }, {
-        id: 1761203862957,
-        degree: 'HSC',
-        institution: 'University of Mumbai',
-        startDate: '2005-06-12',
-        endDate: '2007-06-01',
-        gpa: '',
-        percentage: '60'
-      }, {
-        id: 1761203863574,
-        degree: 'SSC',
-        institution: 'University of Mumbai',
-        startDate: '2004-06-01',
-        endDate: '2005-06-01',
-        gpa: '',
-        percentage: '63'
-      }],
-      experience: [{
-        id: 1,
-        company: 'TIAA',
-        position: 'Senior Associate, Lead Cloud specialist',
-        startDate: '2020-01-27',
-        endDate: '',
-        current: true,
-        responsibilities: 'Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies.\nLead the PI planning for the Team and work closely with Product Owner and Product Manager for end-to-end delivery plan and excution.'
-      }, {
-        id: 1761207963049,
-        company: 'Citiustech',
-        position: 'Tech Lead',
-        startDate: '2016-05-01',
-        endDate: '2020-01-25',
-        current: false,
-        responsibilities: 'Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies.'
-      }, {
-        id: 1761208169200,
-        company: 'GlobeOp Finanacial Services',
-        position: 'Senior Associate',
-        startDate: '2015-06-04',
-        endDate: '2016-04-30',
-        current: false,
-        responsibilities: 'Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies.'
-      }, {
-        id: 1761208221911,
-        company: 'EclinicalWorks',
-        position: 'Senior Software Engineer',
-        startDate: '2015-06-01',
-        endDate: '2016-06-01',
-        current: false,
-        responsibilities: 'Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies.'
-      }, {
-        id: 1761208282474,
-        company: 'Expenzing | Nexstep',
-        position: 'Senior Software Engineer',
-        startDate: '2013-02-04',
-        endDate: '2015-05-31',
-        current: false,
-        responsibilities: 'Lead development of web applications using Spring boot, Python, React, Node.js, and cloud technologies.'
-      }],
-      skills: [{
-        id: 1,
-        name: 'React',
-        category: 'Frontend',
-        proficiency: 'Expert',
-        yearsOfExperience: '4'
-      }, {
-        id: 1763804291838,
-        name: 'Java',
-        category: 'Backend',
-        proficiency: 'Expert',
-        yearsOfExperience: '12'
-      }, {
-        id: 1763804312695,
-        name: 'Spring framework',
-        category: 'Backend',
-        proficiency: 'Advanced',
-        yearsOfExperience: '7'
-      }, {
-        id: 1763804339259,
-        name: 'SQL',
-        category: 'Database',
-        proficiency: 'Advanced',
-        yearsOfExperience: '9.5'
-      }, {
-        id: 1763804354601,
-        name: 'Python',
-        category: 'Backend',
-        proficiency: 'Intermediate',
-        yearsOfExperience: '2'
-      }],
-      technologies: [{
-        id: 1,
-        name: 'React',
-        category: 'Frontend',
-        proficiency: 'Expert',
-        yearsOfExperience: '4'
-      }, {
-        id: 1763804291838,
-        name: 'Java',
-        category: 'Backend',
-        proficiency: 'Expert',
-        yearsOfExperience: '12'
-      }, {
-        id: 1763804312695,
-        name: 'Spring framework',
-        category: 'Backend',
-        proficiency: 'Advanced',
-        yearsOfExperience: '7'
-      }, {
-        id: 1763804339259,
-        name: 'SQL',
-        category: 'Database',
-        proficiency: 'Advanced',
-        yearsOfExperience: '9.5'
-      }, {
-        id: 1763804354601,
-        name: 'Python',
-        category: 'Backend',
-        proficiency: 'Intermediate',
-        yearsOfExperience: '2'
-      }],
-      achievements: [{
-        id: 1,
-        useCase: 'Machine Learning Models',
-        summary: 'Developed predictive models for business analytics',
-        technologies: 'Python, TensorFlow, Scikit-learn',
-        impact: '25% improvement in prediction accuracy'
-      }],
-      aiSkills: [{
-        id: 1,
-        useCase: 'Machine Learning Models',
-        summary: 'Developed predictive models for business analytics',
-        technologies: 'Python, TensorFlow, Scikit-learn',
-        impact: '25% improvement in prediction accuracy'
-      }]
-    });
+    res.status(500).json({ error: 'Database error' });
   }
 });
 
@@ -809,24 +733,14 @@ app.get('/api/config', async (req, res) => {
   try {
     const config = await dbGet('SELECT * FROM site_config WHERE id = 1');
     if (!config) {
-      console.log('No config found in database, returning defaults');
-      return res.json({
-        site_name: 'Portfolio Website',
-        tagline: 'Building Amazing Digital Experiences',
-        primary_color: '#007AFF',
-        secondary_color: '#5856D6'
-      });
+      console.log('No config found in database');
+      return res.json({});
     }
     console.log('Loaded config from database:', config);
     res.json(config);
   } catch (err) {
     console.log('Database error loading config:', err);
-    res.json({
-      site_name: 'Portfolio Website',
-      tagline: 'Building Amazing Digital Experiences',
-      primary_color: '#007AFF',
-      secondary_color: '#5856D6'
-    });
+    res.status(500).json({ error: 'Database error' });
   }
 });
 

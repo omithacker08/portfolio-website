@@ -13,13 +13,7 @@ export const useData = () => {
 };
 
 export const DataProvider = ({ children }) => {
-  const [siteConfig, setSiteConfig] = useState({
-    site_name: 'Portfolio Website',
-    tagline: 'Building Amazing Digital Experiences',
-    logo: '',
-    primary_color: '#007AFF',
-    secondary_color: '#5856D6'
-  });
+  const [siteConfig, setSiteConfig] = useState({});
 
   const [blogs, setBlogs] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -62,13 +56,7 @@ export const DataProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Failed to load site config:', error);
-      // Use defaults only if database fails
-      setSiteConfig({
-        site_name: 'Portfolio Website',
-        tagline: 'Building Amazing Digital Experiences',
-        primary_color: '#007AFF',
-        secondary_color: '#5856D6'
-      });
+      // No fallback - force database usage
     } finally {
       setLoadingState('config', false);
     }
