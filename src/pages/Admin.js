@@ -61,7 +61,7 @@ const Admin = () => {
     if (isAdmin) {
       loadUsers();
     }
-  }, [isAdmin, loadUsers]);
+  }, [isAdmin]); // Remove loadUsers from dependency array to prevent infinite calls
 
   useEffect(() => {
     if (siteConfig) {

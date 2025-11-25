@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import ApiService from '../utils/api';
 import toast from 'react-hot-toast';
 
@@ -265,7 +265,7 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoadingState('users', true);
       const usersData = await ApiService.getUsers();
@@ -276,7 +276,7 @@ export const DataProvider = ({ children }) => {
     } finally {
       setLoadingState('users', false);
     }
-  };
+  }, []);
 
   const updateUser = async (id, userData) => {
     try {
