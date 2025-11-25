@@ -113,11 +113,6 @@ const Blog = () => {
         excerpt: formData.excerpt,
         tags: formData.tags,
         imageUrl: formData.image,
-        author: user.name,
-        authorId: user.id,
-        approved: user.role === 'admin',
-        likes: 0,
-        comments: [],
         isDraft: isDraft
       };
       
