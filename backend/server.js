@@ -237,18 +237,18 @@ function initializeDatabase() {
 
   db.run(`CREATE TABLE IF NOT EXISTS home_content (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    hero_name TEXT DEFAULT 'John Doe',
+    hero_name TEXT DEFAULT 'Om Thacker',
     hero_title TEXT DEFAULT 'I build digital experiences that matter',
     hero_subtitle TEXT,
     hero_stats TEXT,
     about_preview TEXT,
     cta_title TEXT DEFAULT 'Let\'s work together',
     cta_subtitle TEXT,
+    profile_name TEXT DEFAULT 'Om Thacker',
+    profile_status TEXT DEFAULT 'Available for new projects',
+    profile_tech_stack TEXT DEFAULT 'React, Node.js, Python, AI/ML',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
-
-  db.run(`INSERT OR IGNORE INTO home_content (id, hero_name, hero_title, hero_subtitle, hero_stats, about_preview, cta_title, cta_subtitle) 
-          VALUES (1, 'Alex Johnson', 'I build digital experiences that matter', 'Full-stack developer passionate about creating innovative solutions with modern technologies.', '[{"number":"50+","label":"Projects Built"},{"number":"3+","label":"Years Experience"},{"number":"15+","label":"Happy Clients"}]', 'I am a passionate full-stack developer with a love for creating beautiful, functional, and user-friendly applications.', 'Let us work together', 'I am always interested in hearing about new projects and opportunities.')`);
 
   // Create indexes for performance after tables are created
   db.run(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
