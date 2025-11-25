@@ -153,7 +153,8 @@ const testBlogs = async () => {
     blogId = createResult.data.id;
     addResult('POST /blogs', 'PASS', `Blog created with ID: ${blogId}`);
   } else {
-    addResult('POST /blogs', 'FAIL', createResult.error);
+    const errorMsg = typeof createResult.error === 'object' ? JSON.stringify(createResult.error) : createResult.error;
+    addResult('POST /blogs', 'FAIL', errorMsg);
   }
   
   // PUT update blog (if created successfully)
@@ -202,12 +203,14 @@ const testProjects = async () => {
   
   // POST new project
   const newProject = {
-    title: 'Test Project',
-    description: 'Test project description',
+    name: 'Test Project',
+    domain: 'Web Development',
     technologies: 'React, Node.js',
-    github_url: 'https://github.com/test/project',
-    live_url: 'https://test-project.com',
-    image_url: 'https://via.placeholder.com/300'
+    problemStatement: 'Test project problem statement',
+    solutionSummary: 'Test solution summary',
+    benefits: 'Test benefits',
+    imageUrl: 'https://via.placeholder.com/300',
+    videoUrl: 'https://test-video.com'
   };
   
   const createResult = await apiCall('POST', '/projects', newProject, {
@@ -217,7 +220,8 @@ const testProjects = async () => {
     projectId = createResult.data.id;
     addResult('POST /projects', 'PASS', `Project created with ID: ${projectId}`);
   } else {
-    addResult('POST /projects', 'FAIL', createResult.error);
+    const errorMsg = typeof createResult.error === 'object' ? JSON.stringify(createResult.error) : createResult.error;
+    addResult('POST /projects', 'FAIL', errorMsg);
   }
   
   // Clean up - delete test project
@@ -242,11 +246,11 @@ const testAIProjects = async () => {
   
   // POST new AI project
   const newAIProject = {
-    title: 'Test AI Project',
-    description: 'Test AI project description',
-    technologies: 'Python, TensorFlow',
-    github_url: 'https://github.com/test/ai-project',
-    demo_url: 'https://test-ai-project.com'
+    useCase: 'Test AI Use Case',
+    benefits: 'Test AI benefits',
+    domain: 'Machine Learning',
+    cost: 'Low ($1K - $10K)',
+    problemStatement: 'Test AI problem statement'
   };
   
   const createResult = await apiCall('POST', '/ai-projects', newAIProject, {
@@ -255,7 +259,8 @@ const testAIProjects = async () => {
   if (createResult.success) {
     addResult('POST /ai-projects', 'PASS', 'AI project created');
   } else {
-    addResult('POST /ai-projects', 'FAIL', createResult.error);
+    const errorMsg = typeof createResult.error === 'object' ? JSON.stringify(createResult.error) : createResult.error;
+    addResult('POST /ai-projects', 'FAIL', errorMsg);
   }
 };
 
@@ -322,27 +327,34 @@ const testHomeContent = async () => {
   log('\n🏠 Testing Home Page Content', 'cyan');
   
   // GET home content
-  const getResult = await apiCall('GET', '/home-content');
+  const getResult = await apiCall('GET', '/home');
   if (getResult.success) {
-    addResult('GET /home-content', 'PASS', 'Home content retrieved');
+    addResult('GET /home', 'PASS', 'Home content retrieved');
   } else {
-    addResult('GET /home-content', 'FAIL', getResult.error);
+    addResult('GET /home', 'FAIL', getResult.error);
   }
   
   // PUT home content
   const homeData = {
-    hero_title: 'Test Hero Title',
-    hero_subtitle: 'Test Hero Subtitle',
-    hero_description: 'Test hero description'
+    heroName: 'Test Hero Name',
+    heroTitle: 'Test Hero Title',
+    heroSubtitle: 'Test Hero Subtitle',
+    heroStats: [{number: '10+', label: 'Test Projects'}],
+    aboutPreview: 'Test about preview',
+    ctaTitle: 'Test CTA Title',
+    ctaSubtitle: 'Test CTA Subtitle',
+    profileName: 'Test Profile Name',
+    profileStatus: 'Test Status',
+    profileTechStack: 'React, Node.js'
   };
   
-  const updateResult = await apiCall('PUT', '/home-content', homeData, {
+  const updateResult = await apiCall('PUT', '/home', homeData, {
     'Authorization': `Bearer ${authToken}`
   });
   if (updateResult.success) {
-    addResult('PUT /home-content', 'PASS', 'Home content updated');
+    addResult('PUT /home', 'PASS', 'Home content updated');
   } else {
-    addResult('PUT /home-content', 'FAIL', updateResult.error);
+    addResult('PUT /home', 'FAIL', updateResult.error);
   }
 };
 
@@ -351,32 +363,15 @@ const testAboutContent = async () => {
   log('\n👤 Testing About Page Content', 'cyan');
   
   // GET about content
-  const getResult = await apiCall('GET', '/about-content');
+  const getResult = await apiCall('GET', '/about');
   if (getResult.success) {
-    addResult('GET /about-content', 'PASS', 'About content retrieved');
+    addResult('GET /about', 'PASS', 'About content retrieved');
   } else {
-    addResult('GET /about-content', 'FAIL', getResult.error);
+    addResult('GET /about', 'FAIL', getResult.error);
   }
   
-  // PUT about content
-  const aboutData = {
-    bio: 'Test bio content',
-    skills: JSON.stringify(['JavaScript', 'React']),
-    experience: JSON.stringify([{
-      company: 'Test Company',
-      role: 'Developer',
-      duration: '2020-2023'
-    }])
-  };
-  
-  const updateResult = await apiCall('PUT', '/about-content', aboutData, {
-    'Authorization': `Bearer ${authToken}`
-  });
-  if (updateResult.success) {
-    addResult('PUT /about-content', 'PASS', 'About content updated');
-  } else {
-    addResult('PUT /about-content', 'FAIL', updateResult.error);
-  }
+  // Note: About content update endpoint doesn't exist in backend
+  addResult('PUT /about', 'SKIP', 'Endpoint not implemented in backend');
 };
 
 // Main test runner

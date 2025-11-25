@@ -100,8 +100,15 @@ const dbRun = async (query, params = [], retries = 3) => {
   for (let i = 0; i < retries; i++) {
     try {
       if (isPostgreSQL) {
-        const result = await db.query(query, params);
-        return { changes: result.rowCount, lastID: result.insertId };
+        // For INSERT queries, add RETURNING id to get the inserted ID
+        if (query.toLowerCase().includes('insert')) {
+          const returningQuery = query + ' RETURNING id';
+          const result = await db.query(returningQuery, params);
+          return { changes: result.rowCount, lastID: result.rows[0]?.id };
+        } else {
+          const result = await db.query(query, params);
+          return { changes: result.rowCount, lastID: null };
+        }
       } else {
         return new Promise((resolve, reject) => {
           db.run(query, params, function(err) {
@@ -490,12 +497,15 @@ app.post('/api/resume', authenticateToken, async (req, res) => {
 });
 
 // Newsletter
-app.get('/api/newsletter/subscribers', authenticateToken, (req, res) => {
+app.get('/api/newsletter/subscribers', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
-  db.all('SELECT * FROM newsletter_subscribers ORDER BY created_at DESC', (err, subscribers) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+  try {
+    const subscribers = await dbQuery('SELECT * FROM newsletter_subscribers ORDER BY created_at DESC');
     res.json(subscribers);
-  });
+  } catch (err) {
+    console.error('Database error loading newsletter subscribers:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Home Content
@@ -546,30 +556,40 @@ app.post('/api/projects', authenticateToken, async (req, res) => {
     return res.status(400).json({ error: 'Required fields missing' });
   }
   try {
-    const result = await dbRun(`INSERT INTO projects (name, domain, technologies, problem_statement, solution_summary, benefits, image_url, video_url, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-      [name, domain, technologies, problemStatement, solutionSummary, benefits, imageUrl, videoUrl, req.user.id]);
+    const query = isPostgreSQL 
+      ? `INSERT INTO projects (name, domain, technologies, problem_statement, solution_summary, benefits, image_url, video_url, author_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+      : `INSERT INTO projects (name, domain, technologies, problem_statement, solution_summary, benefits, image_url, video_url, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const result = await dbRun(query, [name, domain, technologies, problemStatement, solutionSummary, benefits, imageUrl, videoUrl, req.user.id]);
     res.json({ id: result.lastID, message: 'Project created successfully' });
   } catch (err) {
     console.error('Database error creating project:', err);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: 'Database error: ' + err.message });
   }
 });
 
-app.put('/api/projects/:id', authenticateToken, (req, res) => {
+app.put('/api/projects/:id', authenticateToken, async (req, res) => {
   const { name, domain, technologies, problemStatement, solutionSummary, benefits, imageUrl, videoUrl } = req.body;
-  db.run(`UPDATE projects SET name = ?, domain = ?, technologies = ?, problem_statement = ?, solution_summary = ?, benefits = ?, image_url = ?, video_url = ? WHERE id = ?`, 
-    [name, domain, technologies, problemStatement, solutionSummary, benefits, imageUrl, videoUrl, req.params.id], 
-    function(err) {
-      if (err) return res.status(500).json({ error: 'Database error' });
-      res.json({ message: 'Project updated successfully' });
-    });
+  try {
+    const query = isPostgreSQL 
+      ? `UPDATE projects SET name = $1, domain = $2, technologies = $3, problem_statement = $4, solution_summary = $5, benefits = $6, image_url = $7, video_url = $8 WHERE id = $9`
+      : `UPDATE projects SET name = ?, domain = ?, technologies = ?, problem_statement = ?, solution_summary = ?, benefits = ?, image_url = ?, video_url = ? WHERE id = ?`;
+    await dbRun(query, [name, domain, technologies, problemStatement, solutionSummary, benefits, imageUrl, videoUrl, req.params.id]);
+    res.json({ message: 'Project updated successfully' });
+  } catch (err) {
+    console.error('Database error updating project:', err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
+  }
 });
 
-app.delete('/api/projects/:id', authenticateToken, (req, res) => {
-  db.run('DELETE FROM projects WHERE id = ?', [req.params.id], function(err) {
-    if (err) return res.status(500).json({ error: 'Database error' });
+app.delete('/api/projects/:id', authenticateToken, async (req, res) => {
+  try {
+    const query = isPostgreSQL ? 'DELETE FROM projects WHERE id = $1' : 'DELETE FROM projects WHERE id = ?';
+    await dbRun(query, [req.params.id]);
     res.json({ message: 'Project deleted successfully' });
-  });
+  } catch (err) {
+    console.error('Database error deleting project:', err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
+  }
 });
 
 // AI Projects
@@ -583,43 +603,58 @@ app.get('/api/ai-projects', async (req, res) => {
   }
 });
 
-app.post('/api/ai-projects', authenticateToken, (req, res) => {
+app.post('/api/ai-projects', authenticateToken, async (req, res) => {
   const { useCase, benefits, domain, cost, problemStatement } = req.body;
   if (!useCase || !benefits || !domain || !problemStatement) {
     return res.status(400).json({ error: 'Required fields missing' });
   }
-  db.run(`INSERT INTO ai_projects (use_case, benefits, domain, cost, problem_statement, author_id) VALUES (?, ?, ?, ?, ?, ?)`, 
-    [useCase, benefits, domain, cost, problemStatement, req.user.id], 
-    function(err) {
-      if (err) return res.status(500).json({ error: 'Database error' });
-      res.json({ id: this.lastID, message: 'AI project created successfully' });
-    });
+  try {
+    const query = isPostgreSQL 
+      ? `INSERT INTO ai_projects (use_case, benefits, domain, cost, problem_statement, author_id) VALUES ($1, $2, $3, $4, $5, $6)`
+      : `INSERT INTO ai_projects (use_case, benefits, domain, cost, problem_statement, author_id) VALUES (?, ?, ?, ?, ?, ?)`;
+    const result = await dbRun(query, [useCase, benefits, domain, cost, problemStatement, req.user.id]);
+    res.json({ id: result.lastID, message: 'AI project created successfully' });
+  } catch (err) {
+    console.error('Database error creating AI project:', err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
+  }
 });
 
-app.put('/api/ai-projects/:id', authenticateToken, (req, res) => {
+app.put('/api/ai-projects/:id', authenticateToken, async (req, res) => {
   const { useCase, benefits, domain, cost, problemStatement } = req.body;
-  db.run(`UPDATE ai_projects SET use_case = ?, benefits = ?, domain = ?, cost = ?, problem_statement = ? WHERE id = ?`, 
-    [useCase, benefits, domain, cost, problemStatement, req.params.id], 
-    function(err) {
-      if (err) return res.status(500).json({ error: 'Database error' });
-      res.json({ message: 'AI project updated successfully' });
-    });
+  try {
+    const query = isPostgreSQL 
+      ? `UPDATE ai_projects SET use_case = $1, benefits = $2, domain = $3, cost = $4, problem_statement = $5 WHERE id = $6`
+      : `UPDATE ai_projects SET use_case = ?, benefits = ?, domain = ?, cost = ?, problem_statement = ? WHERE id = ?`;
+    await dbRun(query, [useCase, benefits, domain, cost, problemStatement, req.params.id]);
+    res.json({ message: 'AI project updated successfully' });
+  } catch (err) {
+    console.error('Database error updating AI project:', err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
+  }
 });
 
-app.delete('/api/ai-projects/:id', authenticateToken, (req, res) => {
-  db.run('DELETE FROM ai_projects WHERE id = ?', [req.params.id], function(err) {
-    if (err) return res.status(500).json({ error: 'Database error' });
+app.delete('/api/ai-projects/:id', authenticateToken, async (req, res) => {
+  try {
+    const query = isPostgreSQL ? 'DELETE FROM ai_projects WHERE id = $1' : 'DELETE FROM ai_projects WHERE id = ?';
+    await dbRun(query, [req.params.id]);
     res.json({ message: 'AI project deleted successfully' });
-  });
+  } catch (err) {
+    console.error('Database error deleting AI project:', err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
+  }
 });
 
 // Contact Messages
-app.get('/api/contact/messages', authenticateToken, (req, res) => {
+app.get('/api/contact/messages', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
-  db.all('SELECT * FROM contact_messages ORDER BY created_at DESC', (err, messages) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+  try {
+    const messages = await dbQuery('SELECT * FROM contact_messages ORDER BY created_at DESC');
     res.json(messages);
-  });
+  } catch (err) {
+    console.error('Database error loading contact messages:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Blogs
@@ -656,75 +691,113 @@ app.post('/api/blogs', authenticateToken, async (req, res) => {
 });
 
 // Blog Comments
-app.get('/api/blogs/:id/comments', (req, res) => {
-  db.all('SELECT c.*, u.name as author_name FROM blog_comments c LEFT JOIN users u ON c.user_id = u.id WHERE c.blog_id = ? AND c.approved = 1 ORDER BY c.created_at ASC', [req.params.id], (err, comments) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+app.get('/api/blogs/:id/comments', async (req, res) => {
+  try {
+    const query = isPostgreSQL 
+      ? 'SELECT c.*, u.name as author_name FROM blog_comments c LEFT JOIN users u ON c.user_id = u.id WHERE c.blog_id = $1 AND c.approved = 1 ORDER BY c.created_at ASC'
+      : 'SELECT c.*, u.name as author_name FROM blog_comments c LEFT JOIN users u ON c.user_id = u.id WHERE c.blog_id = ? AND c.approved = 1 ORDER BY c.created_at ASC';
+    const comments = await dbQuery(query, [req.params.id]);
     res.json(comments);
-  });
+  } catch (err) {
+    console.error('Database error loading comments:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-app.post('/api/blogs/:id/comments', authenticateToken, (req, res) => {
+app.post('/api/blogs/:id/comments', authenticateToken, async (req, res) => {
   const { content } = req.body;
   if (!content || !content.trim()) {
     return res.status(400).json({ error: 'Comment content is required' });
   }
-  db.run('INSERT INTO blog_comments (blog_id, user_id, content) VALUES (?, ?, ?)', [req.params.id, req.user.id, content], function(err) {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    res.json({ id: this.lastID, message: 'Comment added successfully' });
-  });
+  try {
+    const query = isPostgreSQL 
+      ? 'INSERT INTO blog_comments (blog_id, user_id, content) VALUES ($1, $2, $3)'
+      : 'INSERT INTO blog_comments (blog_id, user_id, content) VALUES (?, ?, ?)';
+    const result = await dbRun(query, [req.params.id, req.user.id, content]);
+    res.json({ id: result.lastID, message: 'Comment added successfully' });
+  } catch (err) {
+    console.error('Database error creating comment:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Blog Likes
-app.post('/api/blogs/:id/like', authenticateToken, (req, res) => {
+app.post('/api/blogs/:id/like', authenticateToken, async (req, res) => {
   const blogId = req.params.id;
   const userId = req.user.id;
   
-  db.get('SELECT id FROM blog_likes WHERE blog_id = ? AND user_id = ?', [blogId, userId], (err, existing) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+  try {
+    const checkQuery = isPostgreSQL 
+      ? 'SELECT id FROM blog_likes WHERE blog_id = $1 AND user_id = $2'
+      : 'SELECT id FROM blog_likes WHERE blog_id = ? AND user_id = ?';
+    const existing = await dbGet(checkQuery, [blogId, userId]);
     
     if (existing) {
-      db.run('DELETE FROM blog_likes WHERE blog_id = ? AND user_id = ?', [blogId, userId], (err) => {
-        if (err) return res.status(500).json({ error: 'Database error' });
-        res.json({ liked: false, message: 'Like removed' });
-      });
+      const deleteQuery = isPostgreSQL 
+        ? 'DELETE FROM blog_likes WHERE blog_id = $1 AND user_id = $2'
+        : 'DELETE FROM blog_likes WHERE blog_id = ? AND user_id = ?';
+      await dbRun(deleteQuery, [blogId, userId]);
+      res.json({ liked: false, message: 'Like removed' });
     } else {
-      db.run('INSERT INTO blog_likes (blog_id, user_id) VALUES (?, ?)', [blogId, userId], (err) => {
-        if (err) return res.status(500).json({ error: 'Database error' });
-        res.json({ liked: true, message: 'Blog liked' });
-      });
+      const insertQuery = isPostgreSQL 
+        ? 'INSERT INTO blog_likes (blog_id, user_id) VALUES ($1, $2)'
+        : 'INSERT INTO blog_likes (blog_id, user_id) VALUES (?, ?)';
+      await dbRun(insertQuery, [blogId, userId]);
+      res.json({ liked: true, message: 'Blog liked' });
     }
-  });
+  } catch (err) {
+    console.error('Database error with blog like:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-app.get('/api/blogs/:id/likes', (req, res) => {
-  db.get('SELECT COUNT(*) as count FROM blog_likes WHERE blog_id = ?', [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+app.get('/api/blogs/:id/likes', async (req, res) => {
+  try {
+    const query = isPostgreSQL 
+      ? 'SELECT COUNT(*) as count FROM blog_likes WHERE blog_id = $1'
+      : 'SELECT COUNT(*) as count FROM blog_likes WHERE blog_id = ?';
+    const result = await dbGet(query, [req.params.id]);
     res.json({ count: result.count });
-  });
+  } catch (err) {
+    console.error('Database error getting blog likes:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Newsletter Subscribe
-app.post('/api/newsletter/subscribe', (req, res) => {
+app.post('/api/newsletter/subscribe', async (req, res) => {
   const { email, name } = req.body;
   if (!email) {
     return res.status(400).json({ error: 'Email is required' });
   }
-  db.run('INSERT OR REPLACE INTO newsletter_subscribers (email, name, subscribed) VALUES (?, ?, 1)', [email, name || ''], function(err) {
-    if (err) return res.status(500).json({ error: 'Database error' });
+  try {
+    const query = isPostgreSQL 
+      ? 'INSERT INTO newsletter_subscribers (email, name, subscribed) VALUES ($1, $2, 1) ON CONFLICT (email) DO UPDATE SET name = $2, subscribed = 1'
+      : 'INSERT OR REPLACE INTO newsletter_subscribers (email, name, subscribed) VALUES (?, ?, 1)';
+    await dbRun(query, [email, name || '']);
     res.json({ message: 'Successfully subscribed to newsletter' });
-  });
+  } catch (err) {
+    console.error('Database error subscribing to newsletter:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Contact Messages
-app.post('/api/contact', (req, res) => {
+app.post('/api/contact', async (req, res) => {
   const { name, email, subject, message } = req.body;
   if (!name || !email || !subject || !message) {
     return res.status(400).json({ error: 'All fields are required' });
   }
-  db.run('INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)', [name, email, subject, message], function(err) {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    res.json({ id: this.lastID, message: 'Message sent successfully' });
-  });
+  try {
+    const query = isPostgreSQL 
+      ? 'INSERT INTO contact_messages (name, email, subject, message) VALUES ($1, $2, $3, $4)'
+      : 'INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)';
+    const result = await dbRun(query, [name, email, subject, message]);
+    res.json({ id: result.lastID, message: 'Message sent successfully' });
+  } catch (err) {
+    console.error('Database error creating contact message:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Site Config
