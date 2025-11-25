@@ -72,6 +72,39 @@ const Admin = () => {
         colors: {
           primary: siteConfig.primary_color || '#007AFF',
           secondary: siteConfig.secondary_color || '#5856D6'
+        },
+        content: {
+          contact: {
+            email: siteConfig.contact_email || '',
+            phone: siteConfig.contact_phone || ''
+          },
+          resume: {
+            title: siteConfig.resume_title || 'Resume',
+            description: siteConfig.resume_description || 'Professional resume and experience'
+          },
+          projects: {
+            title: siteConfig.projects_title || 'Projects',
+            description: siteConfig.projects_description || 'Showcase of my work and projects'
+          },
+          ai: {
+            title: siteConfig.ai_title || 'AI Solutions',
+            description: siteConfig.ai_description || 'AI and machine learning projects'
+          },
+          blog: {
+            title: siteConfig.blog_title || 'Blog',
+            description: siteConfig.blog_description || 'Thoughts, tutorials, and insights'
+          }
+        },
+        social: {
+          linkedin: siteConfig.social_linkedin || '',
+          github: siteConfig.social_github || '',
+          twitter: siteConfig.social_twitter || '',
+          instagram: siteConfig.social_instagram || '',
+          youtube: siteConfig.social_youtube || ''
+        },
+        seo: {
+          description: siteConfig.seo_description || '',
+          keywords: siteConfig.seo_keywords || ''
         }
       });
     }
@@ -179,14 +212,29 @@ const Admin = () => {
   const handleConfigChange = (e) => {
     const { name, value } = e.target;
     if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setConfigForm({
-        ...configForm,
-        [parent]: {
-          ...configForm[parent],
-          [child]: value
-        }
-      });
+      const parts = name.split('.');
+      if (parts.length === 2) {
+        const [parent, child] = parts;
+        setConfigForm({
+          ...configForm,
+          [parent]: {
+            ...configForm[parent],
+            [child]: value
+          }
+        });
+      } else if (parts.length === 3) {
+        const [parent, child, grandchild] = parts;
+        setConfigForm({
+          ...configForm,
+          [parent]: {
+            ...configForm[parent],
+            [child]: {
+              ...configForm[parent]?.[child],
+              [grandchild]: value
+            }
+          }
+        });
+      }
     } else {
       setConfigForm({
         ...configForm,
