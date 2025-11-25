@@ -690,17 +690,21 @@ app.get('/api/blogs', async (req, res) => {
   }
 });
 
-app.post('/api/blogs', authenticateToken, (req, res) => {
+app.post('/api/blogs', authenticateToken, async (req, res) => {
   const { title, content, excerpt, tags, imageUrl, isDraft } = req.body;
   if (!title || !content) {
     return res.status(400).json({ error: 'Title and content are required' });
   }
-  db.run(`INSERT INTO blogs (title, content, excerpt, tags, image_url, author_id, is_draft) VALUES (?, ?, ?, ?, ?, ?, ?)`, 
-    [title, content, excerpt, tags, imageUrl, req.user.id, isDraft || 0], 
-    function(err) {
-      if (err) return res.status(500).json({ error: 'Database error' });
-      res.json({ id: this.lastID, message: 'Blog created successfully' });
-    });
+  try {
+    const query = isPostgreSQL 
+      ? `INSERT INTO blogs (title, content, excerpt, tags, image_url, author_id, is_draft) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+      : `INSERT INTO blogs (title, content, excerpt, tags, image_url, author_id, is_draft) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const result = await dbRun(query, [title, content, excerpt, tags, imageUrl, req.user.id, isDraft || 0]);
+    res.json({ id: result.lastID, message: 'Blog created successfully' });
+  } catch (err) {
+    console.error('Database error creating blog:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Blog Comments
