@@ -5,6 +5,7 @@ import Header from './components/Header';
 import LoadingSpinner from './components/LoadingSpinner';
 import LiveChat from './components/LiveChat';
 import BottomNav from './components/BottomNav';
+import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -25,13 +26,14 @@ const Admin = React.lazy(() => import('./pages/Admin'));
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <DataProvider>
-          <Router>
-            <div className="App">
-              <Header />
-              <main>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <DataProvider>
+            <Router>
+              <div className="App">
+                <Header />
+                <main>
                 <Suspense fallback={
                   <div style={{ 
                     display: 'flex', 
@@ -74,6 +76,7 @@ function App() {
         </DataProvider>
       </AuthProvider>
     </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -45,7 +45,7 @@ export const DataProvider = ({ children }) => {
     loadHomeContent();
   }, []);
 
-  const loadSiteConfig = async () => {
+  const loadSiteConfig = async (retryCount = 0) => {
     try {
       setLoadingState('config', true);
       console.log('Loading site config from API...');
@@ -56,7 +56,10 @@ export const DataProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Failed to load site config:', error);
-      // No fallback - force database usage
+      if (retryCount < 2) {
+        console.log(`Retrying site config load (attempt ${retryCount + 1})...`);
+        setTimeout(() => loadSiteConfig(retryCount + 1), 1000 * (retryCount + 1));
+      }
     } finally {
       setLoadingState('config', false);
     }
@@ -78,14 +81,19 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  const loadBlogs = async () => {
+  const loadBlogs = async (retryCount = 0) => {
     try {
       setLoadingState('blogs', true);
       const blogsData = await ApiService.getBlogs();
       setBlogs(blogsData || []);
     } catch (error) {
       console.error('Failed to load blogs:', error);
-      setBlogs([]);
+      if (retryCount < 2) {
+        console.log(`Retrying blogs load (attempt ${retryCount + 1})...`);
+        setTimeout(() => loadBlogs(retryCount + 1), 1000 * (retryCount + 1));
+      } else {
+        setBlogs([]);
+      }
     } finally {
       setLoadingState('blogs', false);
     }
@@ -128,13 +136,21 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  const loadProjects = async () => {
+  const loadProjects = async (retryCount = 0) => {
     try {
+      setLoadingState('projects', true);
       const projectsData = await ApiService.getProjects();
       setProjects(projectsData || []);
     } catch (error) {
       console.error('Failed to load projects:', error);
-      setProjects([]);
+      if (retryCount < 2) {
+        console.log(`Retrying projects load (attempt ${retryCount + 1})...`);
+        setTimeout(() => loadProjects(retryCount + 1), 1000 * (retryCount + 1));
+      } else {
+        setProjects([]);
+      }
+    } finally {
+      setLoadingState('projects', false);
     }
   };
 
@@ -158,33 +174,49 @@ export const DataProvider = ({ children }) => {
 
   const updateProject = async (id, project) => {
     try {
+      setLoading(true);
       await ApiService.updateProject(id, project);
       await loadProjects();
       toast.success('Project updated successfully!');
     } catch (error) {
       console.error('Failed to update project:', error);
-      toast.error('Failed to update project');
+      toast.error('Failed to update project: ' + error.message);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const deleteProject = async (id) => {
     try {
+      setLoading(true);
       await ApiService.deleteProject(id);
       await loadProjects();
       toast.success('Project deleted successfully!');
     } catch (error) {
       console.error('Failed to delete project:', error);
-      toast.error('Failed to delete project');
+      toast.error('Failed to delete project: ' + error.message);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const loadAiProjects = async () => {
+  const loadAiProjects = async (retryCount = 0) => {
     try {
+      setLoadingState('aiProjects', true);
       const aiProjectsData = await ApiService.getAiProjects();
       setAiProjects(aiProjectsData || []);
     } catch (error) {
       console.error('Failed to load AI projects:', error);
-      setAiProjects([]);
+      if (retryCount < 2) {
+        console.log(`Retrying AI projects load (attempt ${retryCount + 1})...`);
+        setTimeout(() => loadAiProjects(retryCount + 1), 1000 * (retryCount + 1));
+      } else {
+        setAiProjects([]);
+      }
+    } finally {
+      setLoadingState('aiProjects', false);
     }
   };
 
@@ -205,54 +237,74 @@ export const DataProvider = ({ children }) => {
 
   const updateAiProject = async (id, aiProject) => {
     try {
+      setLoading(true);
       await ApiService.updateAiProject(id, aiProject);
       await loadAiProjects();
       toast.success('AI project updated successfully!');
     } catch (error) {
       console.error('Failed to update AI project:', error);
-      toast.error('Failed to update AI project');
+      toast.error('Failed to update AI project: ' + error.message);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const deleteAiProject = async (id) => {
     try {
+      setLoading(true);
       await ApiService.deleteAiProject(id);
       await loadAiProjects();
       toast.success('AI project deleted successfully!');
     } catch (error) {
       console.error('Failed to delete AI project:', error);
-      toast.error('Failed to delete AI project');
+      toast.error('Failed to delete AI project: ' + error.message);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadUsers = async () => {
     try {
+      setLoadingState('users', true);
       const usersData = await ApiService.getUsers();
-      setUsers(usersData);
+      setUsers(usersData || []);
     } catch (error) {
       console.error('Failed to load users:', error);
+      setUsers([]);
+    } finally {
+      setLoadingState('users', false);
     }
   };
 
   const updateUser = async (id, userData) => {
     try {
+      setLoading(true);
       await ApiService.updateUser(id, userData);
       await loadUsers();
       toast.success('User updated successfully!');
     } catch (error) {
       console.error('Failed to update user:', error);
-      toast.error('Failed to update user');
+      toast.error('Failed to update user: ' + error.message);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const deleteUser = async (id) => {
     try {
+      setLoading(true);
       await ApiService.deleteUser(id);
       await loadUsers();
       toast.success('User deleted successfully!');
     } catch (error) {
       console.error('Failed to delete user:', error);
-      toast.error('Failed to delete user');
+      toast.error('Failed to delete user: ' + error.message);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -346,6 +398,15 @@ export const DataProvider = ({ children }) => {
     loadUsers,
     updateUser,
     deleteUser,
+    // New methods for better data management
+    refreshData: () => {
+      loadSiteConfig();
+      loadBlogs();
+      loadProjects();
+      loadAiProjects();
+      loadAboutContent();
+      loadHomeContent();
+    },
     resume,
     loadResume,
     updateResume,

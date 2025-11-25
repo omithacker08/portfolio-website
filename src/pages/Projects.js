@@ -218,8 +218,8 @@ const Projects = () => {
           ) : (
             projects.map((project) => (
               <div key={project.id} className="project-card">
-                {project.imageUrl && (
-                  <img src={project.imageUrl} alt={project.name} className="project-image" />
+                {(project.image_url || project.imageUrl) && (
+                  <img src={project.image_url || project.imageUrl} alt={project.name} className="project-image" />
                 )}
                 <div className="project-content">
                   <h3>{project.name}</h3>
@@ -236,9 +236,9 @@ const Projects = () => {
                     <h4>Benefits</h4>
                     <p>{project.benefits}</p>
                   </div>
-                  {project.videoUrl && (
+                  {(project.video_url || project.videoUrl) && (
                     <div className="project-video">
-                      <a href={project.videoUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+                      <a href={project.video_url || project.videoUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
                         Watch Demo
                       </a>
                     </div>
