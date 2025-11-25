@@ -57,7 +57,7 @@ const Contact = () => {
                   <div className="method-icon">📧</div>
                   <div>
                     <h3>Email</h3>
-                    <p>hello@portfolio.com</p>
+                    <p>om@omthacker.com</p>
                   </div>
                 </div>
 
@@ -65,7 +65,7 @@ const Contact = () => {
                   <div className="method-icon">📱</div>
                   <div>
                     <h3>Phone</h3>
-                    <p>+1 (555) 123-4567</p>
+                    <p>Available on request</p>
                   </div>
                 </div>
 
@@ -73,7 +73,7 @@ const Contact = () => {
                   <div className="method-icon">📍</div>
                   <div>
                     <h3>Location</h3>
-                    <p>San Francisco, CA</p>
+                    <p>Remote / Global</p>
                   </div>
                 </div>
 
@@ -81,7 +81,7 @@ const Contact = () => {
                   <div className="method-icon">💼</div>
                   <div>
                     <h3>LinkedIn</h3>
-                    <p>linkedin.com/in/portfolio</p>
+                    <p>linkedin.com/in/omthacker</p>
                   </div>
                 </div>
               </div>
@@ -89,10 +89,10 @@ const Contact = () => {
               <div className="social-links">
                 <h3>Follow Me</h3>
                 <div className="social-icons">
-                  <a href="#" className="social-link">GitHub</a>
-                  <a href="#" className="social-link">Twitter</a>
-                  <a href="#" className="social-link">LinkedIn</a>
-                  <a href="#" className="social-link">Instagram</a>
+                  <a href="https://github.com/omthacker" className="social-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+                  <a href="https://twitter.com/omthacker" className="social-link" target="_blank" rel="noopener noreferrer">Twitter</a>
+                  <a href="https://linkedin.com/in/omthacker" className="social-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                  <a href="https://instagram.com/omthacker" className="social-link" target="_blank" rel="noopener noreferrer">Instagram</a>
                 </div>
               </div>
             </div>

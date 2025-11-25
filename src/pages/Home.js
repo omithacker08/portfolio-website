@@ -14,7 +14,7 @@ const Home = () => {
         <div className="container">
           <div className="hero-content">
             <div className="hero-text">
-              <div className="hero-greeting">👋 Hi, I'm {homeContent?.hero_name || 'Alex Johnson'}</div>
+              <div className="hero-greeting">👋 Hi, I'm {homeContent?.hero_name || 'Om Thacker'}</div>
               <h1 className="hero-title">
                 {homeContent?.hero_title || 'I build digital experiences that matter'}
               </h1>
@@ -56,7 +56,7 @@ const Home = () => {
                   <div className="status-indicator"></div>
                 </div>
                 <div className="profile-info">
-                  <h3>{homeContent?.profile_name || 'Alex Johnson'}</h3>
+                  <h3>{homeContent?.profile_name || 'Om Thacker'}</h3>
                   <p>{homeContent?.profile_status || 'Available for new projects'}</p>
                   <div className="tech-stack">
                     {(homeContent?.profile_tech_stack || 'React, Node.js, Python, AI/ML')

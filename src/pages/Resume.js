@@ -62,14 +62,14 @@ const Resume = () => {
       setFormData(newFormData);
     } else {
       const defaultFormData = {
-        name: isAuthenticated ? '' : 'Alex Johnson',
+        name: isAuthenticated ? '' : 'Om Thacker',
         profession: isAuthenticated ? '' : 'Full Stack Developer',
         summary: isAuthenticated ? '' : 'Passionate full-stack developer with expertise in modern web technologies and AI solutions.',
-        email: isAuthenticated ? '' : 'alex.johnson@example.com',
+        email: isAuthenticated ? '' : 'om@omthacker.com',
         phone: isAuthenticated ? '' : '+1 (555) 123-4567',
-        location: isAuthenticated ? '' : 'San Francisco, CA',
-        linkedin: isAuthenticated ? '' : 'linkedin.com/in/alexjohnson',
-        website: isAuthenticated ? '' : 'alexjohnson.dev',
+        location: isAuthenticated ? '' : 'Remote / Global',
+        linkedin: isAuthenticated ? '' : 'linkedin.com/in/omthacker',
+        website: isAuthenticated ? '' : 'omthacker.com',
         education: isAuthenticated ? [] : [{
           id: 1,
           degree: 'Bachelor of Computer Science',

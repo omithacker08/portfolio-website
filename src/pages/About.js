@@ -124,19 +124,13 @@ const About = () => {
           </div>
         </section>
 
-        <SkillsSection skills={[
+        <SkillsSection skills={resume?.technologies || [
           { name: 'React', level: 95, category: 'Frontend' },
           { name: 'JavaScript', level: 90, category: 'Frontend' },
-          { name: 'TypeScript', level: 85, category: 'Frontend' },
           { name: 'Node.js', level: 88, category: 'Backend' },
           { name: 'Python', level: 82, category: 'Backend' },
-          { name: 'Express', level: 85, category: 'Backend' },
-          { name: 'MongoDB', level: 80, category: 'Database' },
-          { name: 'PostgreSQL', level: 75, category: 'Database' },
           { name: 'AWS', level: 78, category: 'Cloud' },
-          { name: 'Docker', level: 72, category: 'DevOps' },
-          { name: 'TensorFlow', level: 70, category: 'AI/ML' },
-          { name: 'PyTorch', level: 68, category: 'AI/ML' }
+          { name: 'AI/ML', level: 75, category: 'AI/ML' }
         ]} />
 
         <section className="values-section">
