@@ -249,7 +249,18 @@ const Admin = () => {
   const saveConfiguration = async () => {
     try {
       console.log('Saving config form:', configForm);
-      await updateSiteConfig(configForm);
+      
+      // Flatten the nested config structure to match backend schema
+      const flatConfig = {
+        site_name: configForm.siteName,
+        tagline: configForm.tagline,
+        logo_url: configForm.logoUrl,
+        primary_color: configForm.colors?.primary,
+        secondary_color: configForm.colors?.secondary
+      };
+      
+      console.log('Flattened config:', flatConfig);
+      await updateSiteConfig(flatConfig);
     } catch (error) {
       console.error('Save configuration error:', error);
     }
