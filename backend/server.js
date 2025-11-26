@@ -905,18 +905,29 @@ app.post('/api/users', authenticateToken, (req, res) => {
     return res.status(400).json({ error: 'All fields are required' });
   }
   
-  const hashedPassword = bcrypt.hashSync(password, 10);
-  
-  db.run(
-    'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-    [name, email, hashedPassword, role || 'user'],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.json({ id: this.lastID, message: 'User created successfully' });
+  // Check if user already exists
+  db.get('SELECT id FROM users WHERE email = ?', [email], (err, existing) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
     }
-  );
+    
+    if (existing) {
+      return res.status(400).json({ error: 'User already exists with this email' });
+    }
+    
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    
+    db.run(
+      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, role || 'user'],
+      function(err) {
+        if (err) {
+          return res.status(500).json({ error: 'Database error: ' + err.message });
+        }
+        res.json({ id: this.lastID, message: 'User created successfully' });
+      }
+    );
+  });
 });
 
 app.delete('/api/users/:id', authenticateToken, (req, res) => {

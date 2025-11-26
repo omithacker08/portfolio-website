@@ -142,9 +142,21 @@ const testData = {
   
   user: {
     name: 'Test User.',
-    email: 'testuser@example.com.',
+    email: `testuser${Date.now()}@example.com.`,
     password: 'testpass123.',
     role: 'user'
+  },
+  
+  contactMessage: {
+    name: 'Test Contact.',
+    email: 'contact@test.com.',
+    subject: 'Test Subject.',
+    message: 'Test contact message content.'
+  },
+  
+  newsletter: {
+    email: `newsletter${Date.now()}@test.com.`,
+    name: 'Test Subscriber.'
   }
 };
 
@@ -429,6 +441,80 @@ const testUserOperations = async () => {
   }
 };
 
+const testContactOperations = async () => {
+  log('📧 Testing Contact Operations...', 'info');
+  
+  const result = await makeRequest('/contact', {
+    method: 'POST',
+    body: JSON.stringify(testData.contactMessage)
+  });
+  
+  if (result.success) {
+    log('✅ Contact message submission successful', 'success');
+    return true;
+  } else {
+    log(`❌ Contact message failed: ${result.error}`, 'error');
+    return false;
+  }
+};
+
+const testNewsletterOperations = async () => {
+  log('📰 Testing Newsletter Operations...', 'info');
+  
+  const result = await makeRequest('/newsletter/subscribe', {
+    method: 'POST',
+    body: JSON.stringify(testData.newsletter)
+  });
+  
+  if (result.success) {
+    log('✅ Newsletter subscription successful', 'success');
+    return true;
+  } else {
+    log(`❌ Newsletter subscription failed: ${result.error}`, 'error');
+    return false;
+  }
+};
+
+const testTemplateOperations = async () => {
+  log('📋 Testing Template Operations...', 'info');
+  
+  const templateData = {
+    name: 'Test Template.',
+    type: 'blog',
+    templateData: {
+      title: 'Template Title.',
+      content: 'Template content.'
+    }
+  };
+  
+  const result = await makeRequest('/templates', {
+    method: 'POST',
+    body: JSON.stringify(templateData)
+  });
+  
+  if (result.success) {
+    log('✅ Template creation successful', 'success');
+    return true;
+  } else {
+    log(`❌ Template creation failed: ${result.error}`, 'error');
+    return false;
+  }
+};
+
+const testAnalyticsOperations = async () => {
+  log('📊 Testing Analytics Operations...', 'info');
+  
+  const result = await makeRequest('/analytics');
+  
+  if (result.success) {
+    log('✅ Analytics data retrieval successful', 'success');
+    return true;
+  } else {
+    log(`❌ Analytics data failed: ${result.error}`, 'error');
+    return false;
+  }
+};
+
 // Main test runner
 const runAllTests = async () => {
   log('🧪 Starting Comprehensive CRUD Operations Test', 'info');
@@ -443,7 +529,11 @@ const runAllTests = async () => {
     { name: 'Project Operations', fn: testProjectOperations },
     { name: 'AI Project Operations', fn: testAIProjectOperations },
     { name: 'Resume Operations', fn: testResumeOperations },
-    { name: 'User Operations', fn: testUserOperations }
+    { name: 'User Operations', fn: testUserOperations },
+    { name: 'Contact Operations', fn: testContactOperations },
+    { name: 'Newsletter Operations', fn: testNewsletterOperations },
+    { name: 'Template Operations', fn: testTemplateOperations },
+    { name: 'Analytics Operations', fn: testAnalyticsOperations }
   ];
   
   const results = [];
