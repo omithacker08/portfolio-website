@@ -14,7 +14,7 @@
     "react-router-dom": "^6.28.0",
     "react-scripts": "^5.0.1",
     "@babel/plugin-transform-private-property-in-object": "^7.25.9",
-    "normalize.css": "^8.0.1"
+    "@csstools/normalize.css": "^12.1.1"
   },
   "scripts": {
     "start": "react-scripts start",
