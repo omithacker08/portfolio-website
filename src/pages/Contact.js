@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import ApiService from '../utils/api';
 import FileUpload from '../components/FileUpload';
+import { useData } from '../context/DataContext';
 import './Contact.css';
 
 const Contact = () => {
+  const { siteConfig } = useData();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -12,6 +14,10 @@ const Contact = () => {
     message: ''
   });
   const [loading, setLoading] = useState(false);
+
+  // Get contact info from site config with fallbacks
+  const contactEmail = siteConfig?.content?.contact?.email || 'om@omthacker.com';
+  const contactPhone = siteConfig?.content?.contact?.phone || 'Available on request';
 
   const handleInputChange = (e) => {
     setFormData({
@@ -57,7 +63,7 @@ const Contact = () => {
                   <div className="method-icon">📧</div>
                   <div>
                     <h3>Email</h3>
-                    <p>om@omthacker.com</p>
+                    <p>{contactEmail}</p>
                   </div>
                 </div>
 
@@ -65,7 +71,7 @@ const Contact = () => {
                   <div className="method-icon">📱</div>
                   <div>
                     <h3>Phone</h3>
-                    <p>Available on request</p>
+                    <p>{contactPhone}</p>
                   </div>
                 </div>
 
