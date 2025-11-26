@@ -67,46 +67,47 @@ const Admin = () => {
 
   useEffect(() => {
     if (siteConfig) {
+      console.log('Site config received:', siteConfig);
       setConfigForm({
         siteName: siteConfig.site_name || '',
         tagline: siteConfig.tagline || '',
-        logoUrl: siteConfig.logo_url || '',
+        logoUrl: siteConfig.logo || '',
         colors: {
           primary: siteConfig.primary_color || '#007AFF',
           secondary: siteConfig.secondary_color || '#5856D6'
         },
         content: {
           contact: {
-            email: siteConfig.contact_email || '',
-            phone: siteConfig.contact_phone || ''
+            email: siteConfig.content?.contact?.email || '',
+            phone: siteConfig.content?.contact?.phone || ''
           },
           resume: {
-            title: siteConfig.resume_title || 'Resume',
-            description: siteConfig.resume_description || 'Professional resume and experience'
+            title: siteConfig.content?.resume?.title || 'Resume',
+            description: siteConfig.content?.resume?.description || 'Professional resume and experience'
           },
           projects: {
-            title: siteConfig.projects_title || 'Projects',
-            description: siteConfig.projects_description || 'Showcase of my work and projects'
+            title: siteConfig.content?.projects?.title || 'Projects',
+            description: siteConfig.content?.projects?.description || 'Showcase of my work and projects'
           },
           ai: {
-            title: siteConfig.ai_title || 'AI Solutions',
-            description: siteConfig.ai_description || 'AI and machine learning projects'
+            title: siteConfig.content?.ai?.title || 'AI Solutions',
+            description: siteConfig.content?.ai?.description || 'AI and machine learning projects'
           },
           blog: {
-            title: siteConfig.blog_title || 'Blog',
-            description: siteConfig.blog_description || 'Thoughts, tutorials, and insights'
+            title: siteConfig.content?.blog?.title || 'Blog',
+            description: siteConfig.content?.blog?.description || 'Thoughts, tutorials, and insights'
           }
         },
         social: {
-          linkedin: siteConfig.social_linkedin || '',
-          github: siteConfig.social_github || '',
-          twitter: siteConfig.social_twitter || '',
-          instagram: siteConfig.social_instagram || '',
-          youtube: siteConfig.social_youtube || ''
+          linkedin: siteConfig.social?.linkedin || '',
+          github: siteConfig.social?.github || '',
+          twitter: siteConfig.social?.twitter || '',
+          instagram: siteConfig.social?.instagram || '',
+          youtube: siteConfig.social?.youtube || ''
         },
         seo: {
-          description: siteConfig.seo_description || '',
-          keywords: siteConfig.seo_keywords || ''
+          description: siteConfig.seo?.description || '',
+          keywords: siteConfig.seo?.keywords || ''
         }
       });
     }
