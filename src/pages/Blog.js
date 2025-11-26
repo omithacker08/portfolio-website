@@ -28,6 +28,7 @@ const Blog = () => {
   const [loading, setLoading] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const [drafts, setDrafts] = useState([]);
+  const [editingBlog, setEditingBlog] = useState(null);
 
   const validateForm = () => {
     const newErrors = {};
@@ -116,7 +117,11 @@ const Blog = () => {
         isDraft: isDraft
       };
       
-      if (isDraft) {
+      if (editingBlog) {
+        await ApiService.updateBlog(editingBlog.id, blogData);
+        toast.success('Blog post updated successfully!');
+        setEditingBlog(null);
+      } else if (isDraft) {
         try {
           await ApiService.saveDraft(blogData);
           toast.success('Draft saved successfully!');
@@ -130,8 +135,9 @@ const Blog = () => {
       }
       setFormData({ title: '', content: '', excerpt: '', tags: '', image: '' });
       setShowCreateForm(false);
+      loadBlogs(); // Refresh blogs list
     } catch (error) {
-      toast.error('Failed to create blog post');
+      toast.error(editingBlog ? 'Failed to update blog post' : 'Failed to create blog post');
     } finally {
       setLoading(false);
     }
@@ -196,6 +202,24 @@ const Blog = () => {
     }
   };
 
+  const handleEditBlog = (blog) => {
+    setFormData({
+      title: blog.title,
+      content: blog.content,
+      excerpt: blog.excerpt || '',
+      tags: blog.tags || '',
+      image: blog.image_url || blog.image || ''
+    });
+    setEditingBlog(blog);
+    setShowCreateForm(true);
+  };
+
+  const cancelEdit = () => {
+    setEditingBlog(null);
+    setFormData({ title: '', content: '', excerpt: '', tags: '', image: '' });
+    setShowCreateForm(false);
+  };
+
   return (
     <div className="blog-page">
       <div className="container">
@@ -206,10 +230,16 @@ const Blog = () => {
           </div>
           {isAuthenticated && (
             <button
-              onClick={() => setShowCreateForm(!showCreateForm)}
+              onClick={() => {
+                if (showCreateForm) {
+                  cancelEdit();
+                } else {
+                  setShowCreateForm(true);
+                }
+              }}
               className="btn btn-primary"
             >
-              {showCreateForm ? 'Cancel' : 'Write New Post'}
+              {showCreateForm ? 'Cancel' : (editingBlog ? 'Cancel Edit' : 'Write New Post')}
             </button>
           )}
         </div>
@@ -217,7 +247,7 @@ const Blog = () => {
         {showCreateForm && (
           <div className="create-form-section">
             <div className="form-section">
-              <h2>Create New Blog Post</h2>
+              <h2>{editingBlog ? 'Edit Blog Post' : 'Create New Blog Post'}</h2>
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label>
@@ -318,7 +348,7 @@ const Blog = () => {
                         Publishing...
                       </>
                     ) : (
-                      'Publish Post'
+                      editingBlog ? 'Update Post' : 'Publish Post'
                     )}
                   </button>
                   <button 
@@ -331,7 +361,7 @@ const Blog = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowCreateForm(false)}
+                    onClick={cancelEdit}
                     className="btn btn-secondary"
                   >
                     Cancel
@@ -383,6 +413,17 @@ const Blog = () => {
                   >
                     📤 Share
                   </button>
+                  {isAuthenticated && (user?.role === 'admin' || user?.id === selectedBlog.author_id) && (
+                    <button 
+                      className="btn btn-warning"
+                      onClick={() => {
+                        setSelectedBlog(null);
+                        handleEditBlog(selectedBlog);
+                      }}
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
                 </div>
                 
                 <div className="comments-section">
@@ -466,6 +507,8 @@ const Blog = () => {
                   toast.success('Link copied to clipboard!');
                 }}
                 onReadMore={handleReadMore}
+                onEdit={handleEditBlog}
+                showEdit={isAuthenticated && (user?.role === 'admin' || user?.id === blog.author_id)}
               />
             ))
             )}

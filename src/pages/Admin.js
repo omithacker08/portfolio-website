@@ -56,6 +56,8 @@ const Admin = () => {
   const [showUserForm, setShowUserForm] = useState(false);
   const [userForm, setUserForm] = useState({ name: '', email: '', password: '', role: 'user' });
   const [editingUser, setEditingUser] = useState(null);
+  const [selectedBlogs, setSelectedBlogs] = useState([]);
+  const [bulkAction, setBulkAction] = useState('');
 
   useEffect(() => {
     if (isAdmin) {
@@ -359,17 +361,80 @@ const Admin = () => {
     updateHomeContent(homeForm);
   };
 
-  const approveBlog = (blogId) => {
-    updateBlog(blogId, { approved: true });
+  const approveBlog = async (blogId) => {
+    try {
+      await updateBlog(blogId, { approved: true });
+      toast.success('Blog approved successfully!');
+    } catch (error) {
+      toast.error('Failed to approve blog');
+    }
   };
 
-  const rejectBlog = (blogId) => {
-    updateBlog(blogId, { approved: false });
+  const rejectBlog = async (blogId) => {
+    try {
+      await updateBlog(blogId, { approved: false });
+      toast.success('Blog rejected successfully!');
+    } catch (error) {
+      toast.error('Failed to reject blog');
+    }
   };
 
-  const handleDeleteBlog = (blogId) => {
+  const handleDeleteBlog = async (blogId) => {
     if (window.confirm('Are you sure you want to delete this blog?')) {
-      deleteBlog(blogId);
+      try {
+        await deleteBlog(blogId);
+        toast.success('Blog deleted successfully!');
+      } catch (error) {
+        toast.error('Failed to delete blog');
+      }
+    }
+  };
+
+  const handleSelectBlog = (blogId) => {
+    setSelectedBlogs(prev => 
+      prev.includes(blogId) 
+        ? prev.filter(id => id !== blogId)
+        : [...prev, blogId]
+    );
+  };
+
+  const handleSelectAllBlogs = () => {
+    if (selectedBlogs.length === blogs?.length) {
+      setSelectedBlogs([]);
+    } else {
+      setSelectedBlogs(blogs?.map(blog => blog.id) || []);
+    }
+  };
+
+  const handleBulkAction = async () => {
+    if (!bulkAction || selectedBlogs.length === 0) {
+      toast.error('Please select blogs and an action');
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to ${bulkAction} ${selectedBlogs.length} blog(s)?`;
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      const promises = selectedBlogs.map(blogId => {
+        switch (bulkAction) {
+          case 'approve':
+            return updateBlog(blogId, { approved: true });
+          case 'reject':
+            return updateBlog(blogId, { approved: false });
+          case 'delete':
+            return deleteBlog(blogId);
+          default:
+            return Promise.resolve();
+        }
+      });
+
+      await Promise.all(promises);
+      toast.success(`Successfully ${bulkAction}d ${selectedBlogs.length} blog(s)`);
+      setSelectedBlogs([]);
+      setBulkAction('');
+    } catch (error) {
+      toast.error(`Failed to ${bulkAction} some blogs`);
     }
   };
 
@@ -878,14 +943,29 @@ const Admin = () => {
               <div className="bulk-operations">
                 <h3>Bulk Operations</h3>
                 <div className="bulk-controls">
-                  <select className="form-control">
+                  <select 
+                    className="form-control"
+                    value={bulkAction}
+                    onChange={(e) => setBulkAction(e.target.value)}
+                  >
                     <option value="">Select Action</option>
                     <option value="approve">Approve Selected</option>
                     <option value="reject">Reject Selected</option>
                     <option value="delete">Delete Selected</option>
                   </select>
-                  <button className="btn btn-secondary">Apply to Selected</button>
-                  <button className="btn btn-primary">Select All</button>
+                  <button 
+                    className="btn btn-secondary"
+                    onClick={handleBulkAction}
+                    disabled={selectedBlogs.length === 0 || !bulkAction}
+                  >
+                    Apply to Selected ({selectedBlogs.length})
+                  </button>
+                  <button 
+                    className="btn btn-primary"
+                    onClick={handleSelectAllBlogs}
+                  >
+                    {selectedBlogs.length === blogs?.length ? 'Deselect All' : 'Select All'}
+                  </button>
                 </div>
               </div>
 
@@ -894,7 +974,11 @@ const Admin = () => {
                   <div key={blog.id} className="blog-item">
                     <div className="blog-header">
                       <div className="blog-select">
-                        <input type="checkbox" />
+                        <input 
+                          type="checkbox" 
+                          checked={selectedBlogs.includes(blog.id)}
+                          onChange={() => handleSelectBlog(blog.id)}
+                        />
                       </div>
                       <h4>{blog.title}</h4>
                       <div className="blog-actions">

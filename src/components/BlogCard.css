@@ -161,6 +161,17 @@
   transform: translateX(2px);
 }
 
+.edit-btn {
+  background: var(--warning-color, #ff9500);
+  color: white;
+  font-weight: 600;
+}
+
+.edit-btn:hover {
+  background: var(--warning-hover, #e6850e);
+  color: white;
+}
+
 .action-icon {
   font-size: 16px;
 }

@@ -3,7 +3,7 @@ import LazyImage from './LazyImage';
 import SocialShare from './SocialShare';
 import './BlogCard.css';
 
-const BlogCard = ({ blog, onLike, onShare, onReadMore }) => {
+const BlogCard = ({ blog, onLike, onShare, onReadMore, onEdit, showEdit = false }) => {
 
   const handleLike = () => {
     if (onLike) onLike(blog.id);
@@ -78,6 +78,16 @@ const BlogCard = ({ blog, onLike, onShare, onReadMore }) => {
             <span className="action-text">Read More</span>
             <span className="action-icon">→</span>
           </button>
+          
+          {showEdit && (
+            <button 
+              className="action-btn edit-btn"
+              onClick={() => onEdit && onEdit(blog)}
+            >
+              <span className="action-icon">✏️</span>
+              <span className="action-text">Edit</span>
+            </button>
+          )}
         </div>
       </div>
     </article>
