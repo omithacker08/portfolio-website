@@ -125,6 +125,25 @@
 
 .blog-content p {
   margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.blog-content * {
+  color: var(--text-primary);
+}
+
+.blog-content h1,
+.blog-content h2,
+.blog-content h3,
+.blog-content h4,
+.blog-content h5,
+.blog-content h6 {
+  color: var(--text-primary);
+}
+
+.blog-content span,
+.blog-content div {
+  color: inherit;
 }
 
 /* Rich content styles for blog display */
