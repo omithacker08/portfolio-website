@@ -405,6 +405,21 @@ app.get('/api/config', (req, res) => {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    
+    if (config) {
+      // Parse JSON fields
+      try {
+        config.content = config.content ? JSON.parse(config.content) : {};
+        config.social = config.social ? JSON.parse(config.social) : {};
+        config.seo = config.seo ? JSON.parse(config.seo) : {};
+      } catch (e) {
+        console.error('Error parsing config JSON:', e);
+        config.content = {};
+        config.social = {};
+        config.seo = {};
+      }
+    }
+    
     res.json(config || {});
   });
 });
@@ -534,20 +549,51 @@ app.get('/api/blogs/drafts', authenticateToken, (req, res) => {
 });
 
 app.put('/api/blogs/:id', authenticateToken, (req, res) => {
-  const { approved } = req.body;
+  const { approved, title, content, excerpt, tags, imageUrl } = req.body;
   
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  
-  db.run('UPDATE blogs SET approved = ? WHERE id = ?', [approved, req.params.id], function(err) {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
+  // Check if it's an approval/rejection or full update
+  if (approved !== undefined) {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
     }
     
-    logAdminAction(req.user.id, approved ? 'APPROVE_BLOG' : 'REJECT_BLOG', 'blog', req.params.id, { approved }, req.clientIp);
-    res.json({ message: 'Blog updated successfully' });
-  });
+    db.run('UPDATE blogs SET approved = ? WHERE id = ?', [approved, req.params.id], function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      logAdminAction(req.user.id, approved ? 'APPROVE_BLOG' : 'REJECT_BLOG', 'blog', req.params.id, { approved }, req.clientIp);
+      res.json({ message: 'Blog updated successfully' });
+    });
+  } else {
+    // Full blog update
+    db.get('SELECT author_id FROM blogs WHERE id = ?', [req.params.id], (err, blog) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      if (!blog) {
+        return res.status(404).json({ error: 'Blog not found' });
+      }
+      
+      if (blog.author_id !== req.user.id && req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Not authorized to edit this blog' });
+      }
+      
+      const query = `
+        UPDATE blogs SET 
+          title = ?, content = ?, excerpt = ?, tags = ?, image_url = ?
+        WHERE id = ?
+      `;
+      
+      db.run(query, [title, content, excerpt, tags, imageUrl, req.params.id], function(err) {
+        if (err) {
+          return res.status(500).json({ error: 'Database error' });
+        }
+        res.json({ message: 'Blog updated successfully' });
+      });
+    });
+  }
 });
 
 // Bulk operations
