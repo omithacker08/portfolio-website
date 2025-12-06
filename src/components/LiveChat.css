@@ -9,13 +9,12 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: #4A154B;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 24px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
 }
@@ -23,6 +22,12 @@
 .chat-toggle:hover {
   transform: scale(1.1);
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+  background: #611f69;
+}
+
+.chat-toggle svg {
+  width: 28px;
+  height: 28px;
 }
 
 .chat-window {
