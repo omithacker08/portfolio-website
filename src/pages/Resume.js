@@ -65,10 +65,10 @@ const Resume = () => {
         name: isAuthenticated ? '' : 'Om Thacker',
         profession: isAuthenticated ? '' : 'Full Stack Developer',
         summary: isAuthenticated ? '' : 'Passionate full-stack developer with expertise in modern web technologies and AI solutions.',
-        email: isAuthenticated ? '' : 'om@omthacker.com',
-        phone: isAuthenticated ? '' : '+1 (555) 123-4567',
+        email: isAuthenticated ? '' : 'omi.thacker08@gmail.com',
+        phone: isAuthenticated ? '' : '+91 9870915196',
         location: isAuthenticated ? '' : 'Remote / Global',
-        linkedin: isAuthenticated ? '' : 'linkedin.com/in/omthacker',
+        linkedin: isAuthenticated ? '' : 'www.linkedin.com/in/om-thacker-39a2b965',
         website: isAuthenticated ? '' : 'omthacker.com',
         education: isAuthenticated ? [] : [{
           id: 1,

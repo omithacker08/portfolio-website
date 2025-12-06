@@ -101,10 +101,10 @@ const Contact = () => {
               <div className="social-links">
                 <h3>Follow Me</h3>
                 <div className="social-icons">
-                  <a href="https://github.com/omthacker" className="social-link" target="_blank" rel="noopener noreferrer">GitHub</a>
-                  <a href="https://twitter.com/omthacker" className="social-link" target="_blank" rel="noopener noreferrer">Twitter</a>
-                  <a href="https://linkedin.com/in/omthacker" className="social-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                  <a href="https://instagram.com/omthacker" className="social-link" target="_blank" rel="noopener noreferrer">Instagram</a>
+                  <a href="https://github.com/omithacker08" className="social-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+                  <a href="https://x.com/omthacker" className="social-link" target="_blank" rel="noopener noreferrer">Twitter</a>
+                  <a href="www.linkedin.com/in/om-thacker-39a2b965" className="social-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                  <a href="https://instagram.com/omi004" className="social-link" target="_blank" rel="noopener noreferrer">Instagram</a>
                 </div>
               </div>
             </div>
