@@ -989,6 +989,23 @@ app.put('/api/config', authenticateToken, async (req, res) => {
   }
 });
 
+// Database migration endpoint
+app.post('/api/migrate', async (req, res) => {
+  try {
+    if (isPostgreSQL) {
+      await db.query(`ALTER TABLE site_config ADD COLUMN IF NOT EXISTS content TEXT`);
+      await db.query(`ALTER TABLE site_config ADD COLUMN IF NOT EXISTS social TEXT`);
+      await db.query(`ALTER TABLE site_config ADD COLUMN IF NOT EXISTS seo TEXT`);
+      res.json({ message: 'Migration completed successfully' });
+    } else {
+      res.json({ message: 'SQLite does not need migration' });
+    }
+  } catch (err) {
+    console.error('Migration error:', err);
+    res.status(500).json({ error: 'Migration failed: ' + err.message });
+  }
+});
+
 // Database status endpoint
 app.get('/api/db-status', async (req, res) => {
   try {
