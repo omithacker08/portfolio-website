@@ -157,9 +157,11 @@ const Admin = () => {
           
           return Array.isArray(aboutContent.what_i_do) ? aboutContent.what_i_do : defaultServices;
         })(),
-        technicalSkills: typeof aboutContent.technical_skills === 'string' && aboutContent.technical_skills.startsWith('[') 
-          ? JSON.parse(aboutContent.technical_skills) 
-          : aboutContent.technical_skills || []
+        technicalSkills: Array.isArray(aboutContent.technical_skills) 
+          ? aboutContent.technical_skills 
+          : (typeof aboutContent.technical_skills === 'string' && aboutContent.technical_skills.startsWith('[') 
+            ? JSON.parse(aboutContent.technical_skills) 
+            : aboutContent.technical_skills || [])
       });
     }
   }, [aboutContent]);
@@ -252,11 +254,13 @@ const Admin = () => {
       
       // Flatten the nested config structure to match backend schema
       const flatConfig = {
-        site_name: configForm.siteName,
+        siteName: configForm.siteName,
         tagline: configForm.tagline,
-        logo_url: configForm.logoUrl,
-        primary_color: configForm.colors?.primary,
-        secondary_color: configForm.colors?.secondary
+        logoUrl: configForm.logoUrl,
+        colors: configForm.colors,
+        content: configForm.content,
+        social: configForm.social,
+        seo: configForm.seo
       };
       
       console.log('Flattened config:', flatConfig);
