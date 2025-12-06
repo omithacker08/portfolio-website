@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ApiService from '../utils/api';
 import './LiveChat.css';
 
 const LiveChat = () => {
@@ -8,7 +9,7 @@ const LiveChat = () => {
     { id: 1, text: "Hi! How can I help you today?", sender: 'bot', time: new Date() }
   ]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!message.trim()) return;
     
     const newMessage = {
@@ -19,9 +20,15 @@ const LiveChat = () => {
     };
     
     setMessages([...messages, newMessage]);
+    const messageText = message;
     setMessage('');
     
-    // Auto-reply
+    try {
+      await ApiService.sendChatMessage({ message: messageText });
+    } catch (error) {
+      console.error('Failed to save chat message:', error);
+    }
+    
     setTimeout(() => {
       setMessages(prev => [...prev, {
         id: Date.now() + 1,

@@ -161,6 +161,9 @@ const initializeDatabase = async () => {
         logo_url TEXT,
         primary_color TEXT DEFAULT '#007AFF',
         secondary_color TEXT DEFAULT '#5856D6',
+        content TEXT,
+        social TEXT,
+        seo TEXT,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`);
       
@@ -301,6 +304,9 @@ const initializeDatabase = async () => {
         logo_url TEXT,
         primary_color TEXT DEFAULT '#007AFF',
         secondary_color TEXT DEFAULT '#5856D6',
+        content TEXT,
+        social TEXT,
+        seo TEXT,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`);
       
@@ -533,7 +539,11 @@ app.get('/api/home', async (req, res) => {
   try {
     const home = await dbGet('SELECT * FROM home_content WHERE id = 1');
     if (home && home.hero_stats) {
-      home.hero_stats = JSON.parse(home.hero_stats);
+      try {
+        home.hero_stats = JSON.parse(home.hero_stats);
+      } catch (e) {
+        home.hero_stats = [];
+      }
     }
     res.json(home || {});
   } catch (err) {
@@ -551,11 +561,18 @@ app.put('/api/home', authenticateToken, async (req, res) => {
       ? `UPDATE home_content SET hero_name = $1, hero_title = $2, hero_subtitle = $3, hero_stats = $4, about_preview = $5, cta_title = $6, cta_subtitle = $7, profile_name = $8, profile_status = $9, profile_tech_stack = $10, updated_at = CURRENT_TIMESTAMP WHERE id = 1`
       : `UPDATE home_content SET hero_name = ?, hero_title = ?, hero_subtitle = ?, hero_stats = ?, about_preview = ?, cta_title = ?, cta_subtitle = ?, profile_name = ?, profile_status = ?, profile_tech_stack = ?, updated_at = datetime('now') WHERE id = 1`;
     
-    await dbRun(updateQuery, [heroName, heroTitle, heroSubtitle, JSON.stringify(heroStats || []), aboutPreview, ctaTitle, ctaSubtitle, profileName, profileStatus, profileTechStack]);
+    const result = await dbRun(updateQuery, [heroName, heroTitle, heroSubtitle, JSON.stringify(heroStats || []), aboutPreview, ctaTitle, ctaSubtitle, profileName, profileStatus, profileTechStack]);
+    
+    if (result.changes === 0) {
+      const insertQuery = isPostgreSQL
+        ? `INSERT INTO home_content (id, hero_name, hero_title, hero_subtitle, hero_stats, about_preview, cta_title, cta_subtitle, profile_name, profile_status, profile_tech_stack) VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+        : `INSERT INTO home_content (id, hero_name, hero_title, hero_subtitle, hero_stats, about_preview, cta_title, cta_subtitle, profile_name, profile_status, profile_tech_stack) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      await dbRun(insertQuery, [heroName, heroTitle, heroSubtitle, JSON.stringify(heroStats || []), aboutPreview, ctaTitle, ctaSubtitle, profileName, profileStatus, profileTechStack]);
+    }
     res.json({ message: 'Home content updated successfully' });
   } catch (err) {
     console.error('Database error updating home content:', err);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: 'Database error: ' + err.message });
   }
 });
 
@@ -840,9 +857,40 @@ app.post('/api/contact', async (req, res) => {
       ? 'INSERT INTO contact_messages (name, email, subject, message) VALUES ($1, $2, $3, $4)'
       : 'INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)';
     const result = await dbRun(query, [name, email, subject, message]);
+    
+    console.log('\n=== CONTACT FORM SUBMISSION ===');
+    console.log('From:', name, '<' + email + '>');
+    console.log('Subject:', subject);
+    console.log('Message:', message);
+    console.log('================================\n');
+    
     res.json({ id: result.lastID, message: 'Message sent successfully' });
   } catch (err) {
     console.error('Database error creating contact message:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Live Chat Messages
+app.post('/api/chat', async (req, res) => {
+  const { name, email, message } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+  try {
+    const query = isPostgreSQL 
+      ? 'INSERT INTO contact_messages (name, email, subject, message) VALUES ($1, $2, $3, $4)'
+      : 'INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)';
+    const result = await dbRun(query, [name || 'Chat User', email || 'chat@user.com', 'Live Chat', message]);
+    
+    console.log('\n=== LIVE CHAT MESSAGE ===');
+    console.log('From:', name || 'Anonymous');
+    console.log('Message:', message);
+    console.log('========================\n');
+    
+    res.json({ id: result.lastID, message: 'Message received' });
+  } catch (err) {
+    console.error('Database error saving chat message:', err);
     res.status(500).json({ error: 'Database error' });
   }
 });
@@ -856,6 +904,31 @@ app.get('/api/config', async (req, res) => {
       console.log('No config found in database');
       return res.json({});
     }
+    
+    // Parse JSON fields
+    if (config.content) {
+      try {
+        config.content = JSON.parse(config.content);
+      } catch (e) {
+        console.error('Error parsing content JSON:', e);
+        config.content = {};
+      }
+    }
+    if (config.social) {
+      try {
+        config.social = JSON.parse(config.social);
+      } catch (e) {
+        config.social = {};
+      }
+    }
+    if (config.seo) {
+      try {
+        config.seo = JSON.parse(config.seo);
+      } catch (e) {
+        config.seo = {};
+      }
+    }
+    
     console.log('Loaded config from database:', config);
     res.json(config);
   } catch (err) {
@@ -869,34 +942,40 @@ app.put('/api/config', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
   
   console.log('PUT /api/config called with:', req.body);
-  const { siteName, tagline, logoUrl, colors } = req.body;
+  const { siteName, tagline, logoUrl, colors, content, social, seo } = req.body;
   
   try {
     // Try to update first
     const updateQuery = isPostgreSQL 
-      ? `UPDATE site_config SET site_name = $1, tagline = $2, logo_url = $3, primary_color = $4, secondary_color = $5, updated_at = CURRENT_TIMESTAMP WHERE id = 1`
-      : `UPDATE site_config SET site_name = ?, tagline = ?, logo_url = ?, primary_color = ?, secondary_color = ?, updated_at = datetime('now') WHERE id = 1`;
+      ? `UPDATE site_config SET site_name = $1, tagline = $2, logo_url = $3, primary_color = $4, secondary_color = $5, content = $6, social = $7, seo = $8, updated_at = CURRENT_TIMESTAMP WHERE id = 1`
+      : `UPDATE site_config SET site_name = ?, tagline = ?, logo_url = ?, primary_color = ?, secondary_color = ?, content = ?, social = ?, seo = ?, updated_at = datetime('now') WHERE id = 1`;
     
     const result = await dbRun(updateQuery, [
       siteName || 'Portfolio Website', 
       tagline || 'Building Amazing Digital Experiences', 
       logoUrl || '', 
       colors?.primary || '#007AFF', 
-      colors?.secondary || '#5856D6'
+      colors?.secondary || '#5856D6',
+      JSON.stringify(content || {}),
+      JSON.stringify(social || {}),
+      JSON.stringify(seo || {})
     ]);
     
     if (result.changes === 0) {
       // No rows updated, try insert
       const insertQuery = isPostgreSQL
-        ? `INSERT INTO site_config (id, site_name, tagline, logo_url, primary_color, secondary_color, updated_at) VALUES (1, $1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`
-        : `INSERT INTO site_config (id, site_name, tagline, logo_url, primary_color, secondary_color, updated_at) VALUES (1, ?, ?, ?, ?, ?, datetime('now'))`;
+        ? `INSERT INTO site_config (id, site_name, tagline, logo_url, primary_color, secondary_color, content, social, seo, updated_at) VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`
+        : `INSERT INTO site_config (id, site_name, tagline, logo_url, primary_color, secondary_color, content, social, seo, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
       
       await dbRun(insertQuery, [
         siteName || 'Portfolio Website', 
         tagline || 'Building Amazing Digital Experiences', 
         logoUrl || '', 
         colors?.primary || '#007AFF', 
-        colors?.secondary || '#5856D6'
+        colors?.secondary || '#5856D6',
+        JSON.stringify(content || {}),
+        JSON.stringify(social || {}),
+        JSON.stringify(seo || {})
       ]);
       console.log('Config inserted successfully');
     } else {
@@ -978,17 +1057,20 @@ app.get('/api/config/test', (req, res) => {
 app.get('/api/about', async (req, res) => {
   try {
     const about = await dbGet('SELECT * FROM about_content WHERE id = 1');
-    if (about) {
-      res.json(about);
-    } else {
-      res.json({
-        job_title: 'Professional Developer',
-        job_icon: '💻',
-        who_i_am: 'Passionate developer with expertise in modern technologies',
-        what_i_do: 'Building innovative solutions and user-friendly applications',
-        technical_skills: []
-      });
+    if (about && about.technical_skills && typeof about.technical_skills === 'string') {
+      try {
+        about.technical_skills = JSON.parse(about.technical_skills);
+      } catch (e) {
+        about.technical_skills = [];
+      }
     }
+    res.json(about || {
+      job_title: 'Professional Developer',
+      job_icon: '💻',
+      who_i_am: 'Passionate developer with expertise in modern technologies',
+      what_i_do: 'Building innovative solutions and user-friendly applications',
+      technical_skills: []
+    });
   } catch (err) {
     console.error('Database error loading about content:', err);
     res.json({
@@ -1014,12 +1096,10 @@ app.put('/api/about', authenticateToken, async (req, res) => {
     
     if (result.changes === 0) {
       const insertQuery = isPostgreSQL
-        ? `INSERT INTO about_content (id, job_title, job_icon, who_i_am, what_i_do, technical_skills, updated_at) VALUES (1, $1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`
-        : `INSERT INTO about_content (id, job_title, job_icon, who_i_am, what_i_do, technical_skills, updated_at) VALUES (1, ?, ?, ?, ?, ?, datetime('now'))`;
-      
+        ? `INSERT INTO about_content (id, job_title, job_icon, who_i_am, what_i_do, technical_skills) VALUES (1, $1, $2, $3, $4, $5)`
+        : `INSERT INTO about_content (id, job_title, job_icon, who_i_am, what_i_do, technical_skills) VALUES (1, ?, ?, ?, ?, ?)`;
       await dbRun(insertQuery, [jobTitle, jobIcon, whoIAm, whatIDo, JSON.stringify(technicalSkills || [])]);
     }
-    
     res.json({ message: 'About content updated successfully' });
   } catch (err) {
     console.error('Database error updating about content:', err);

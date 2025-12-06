@@ -124,7 +124,7 @@ const About = () => {
           </div>
         </section>
 
-        <SkillsSection skills={resume?.technologies || [
+        <SkillsSection skills={aboutContent?.technical_skills || [
           { name: 'React', level: 95, category: 'Frontend' },
           { name: 'JavaScript', level: 90, category: 'Frontend' },
           { name: 'Node.js', level: 88, category: 'Backend' },

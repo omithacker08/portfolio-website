@@ -320,6 +320,13 @@ class ApiService {
     });
   }
 
+  async sendChatMessage(messageData) {
+    return this.request('/chat', {
+      method: 'POST',
+      body: JSON.stringify(messageData),
+    });
+  }
+
   logout() {
     this.setToken(null);
   }
