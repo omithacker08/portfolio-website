@@ -266,6 +266,13 @@ const initializeDatabase = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`);
       
+      await db.query(`CREATE TABLE IF NOT EXISTS contact_info (
+        id INTEGER PRIMARY KEY,
+        email TEXT,
+        phone TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      
       console.log('PostgreSQL database tables initialized (no data insertion)');
     } catch (error) {
       console.error('PostgreSQL initialization error:', error);
@@ -892,6 +899,41 @@ app.post('/api/chat', async (req, res) => {
   } catch (err) {
     console.error('Database error saving chat message:', err);
     res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Contact Info
+app.get('/api/contact-info', async (req, res) => {
+  try {
+    const info = await dbGet('SELECT * FROM contact_info WHERE id = 1');
+    res.json(info || { email: '', phone: '' });
+  } catch (err) {
+    console.error('Error loading contact info:', err);
+    res.json({ email: '', phone: '' });
+  }
+});
+
+app.put('/api/contact-info', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+  const { email, phone } = req.body;
+  
+  try {
+    const updateQuery = isPostgreSQL 
+      ? `UPDATE contact_info SET email = $1, phone = $2, updated_at = CURRENT_TIMESTAMP WHERE id = 1`
+      : `UPDATE contact_info SET email = ?, phone = ?, updated_at = datetime('now') WHERE id = 1`;
+    
+    const result = await dbRun(updateQuery, [email, phone]);
+    
+    if (result.changes === 0) {
+      const insertQuery = isPostgreSQL
+        ? `INSERT INTO contact_info (id, email, phone) VALUES (1, $1, $2)`
+        : `INSERT INTO contact_info (id, email, phone) VALUES (1, ?, ?)`;
+      await dbRun(insertQuery, [email, phone]);
+    }
+    res.json({ message: 'Contact info updated successfully' });
+  } catch (err) {
+    console.error('Error updating contact info:', err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
   }
 });
 

@@ -252,19 +252,28 @@ const Admin = () => {
     try {
       console.log('Saving config form:', configForm);
       
-      // Flatten the nested config structure to match backend schema
       const flatConfig = {
         siteName: configForm.siteName,
         tagline: configForm.tagline,
         logoUrl: configForm.logoUrl,
-        colors: configForm.colors,
-        content: configForm.content,
-        social: configForm.social,
-        seo: configForm.seo
+        colors: configForm.colors
       };
       
-      console.log('Flattened config:', flatConfig);
       await updateSiteConfig(flatConfig);
+      
+      if (configForm.content?.contact?.email || configForm.content?.contact?.phone) {
+        await fetch('https://portfolio-backend-qxhg.onrender.com/api/contact-info', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            email: configForm.content.contact.email,
+            phone: configForm.content.contact.phone
+          })
+        });
+      }
     } catch (error) {
       console.error('Save configuration error:', error);
     }

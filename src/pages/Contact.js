@@ -6,7 +6,6 @@ import { useData } from '../context/DataContext';
 import './Contact.css';
 
 const Contact = () => {
-  const { siteConfig } = useData();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,10 +13,17 @@ const Contact = () => {
     message: ''
   });
   const [loading, setLoading] = useState(false);
+  const [contactInfo, setContactInfo] = useState({ email: 'om@omthacker.com', phone: 'Available on request' });
 
-  // Get contact info from site config with fallbacks
-  const contactEmail = siteConfig?.content?.contact?.email || 'om@omthacker.com';
-  const contactPhone = siteConfig?.content?.contact?.phone || 'Available on request';
+  React.useEffect(() => {
+    fetch('https://portfolio-backend-qxhg.onrender.com/api/contact-info')
+      .then(res => res.json())
+      .then(data => setContactInfo(data))
+      .catch(err => console.error('Failed to load contact info:', err));
+  }, []);
+
+  const contactEmail = contactInfo.email || 'om@omthacker.com';
+  const contactPhone = contactInfo.phone || 'Available on request';
 
   const handleInputChange = (e) => {
     setFormData({
