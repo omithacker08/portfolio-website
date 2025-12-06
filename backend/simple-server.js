@@ -942,40 +942,32 @@ app.put('/api/config', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
   
   console.log('PUT /api/config called with:', req.body);
-  const { siteName, tagline, logoUrl, colors, content, social, seo } = req.body;
+  const { siteName, tagline, logoUrl, colors } = req.body;
   
   try {
-    // Try to update first
     const updateQuery = isPostgreSQL 
-      ? `UPDATE site_config SET site_name = $1, tagline = $2, logo_url = $3, primary_color = $4, secondary_color = $5, content = $6, social = $7, seo = $8, updated_at = CURRENT_TIMESTAMP WHERE id = 1`
-      : `UPDATE site_config SET site_name = ?, tagline = ?, logo_url = ?, primary_color = ?, secondary_color = ?, content = ?, social = ?, seo = ?, updated_at = datetime('now') WHERE id = 1`;
+      ? `UPDATE site_config SET site_name = $1, tagline = $2, logo_url = $3, primary_color = $4, secondary_color = $5, updated_at = CURRENT_TIMESTAMP WHERE id = 1`
+      : `UPDATE site_config SET site_name = ?, tagline = ?, logo_url = ?, primary_color = ?, secondary_color = ?, updated_at = datetime('now') WHERE id = 1`;
     
     const result = await dbRun(updateQuery, [
       siteName || 'Portfolio Website', 
       tagline || 'Building Amazing Digital Experiences', 
       logoUrl || '', 
       colors?.primary || '#007AFF', 
-      colors?.secondary || '#5856D6',
-      JSON.stringify(content || {}),
-      JSON.stringify(social || {}),
-      JSON.stringify(seo || {})
+      colors?.secondary || '#5856D6'
     ]);
     
     if (result.changes === 0) {
-      // No rows updated, try insert
       const insertQuery = isPostgreSQL
-        ? `INSERT INTO site_config (id, site_name, tagline, logo_url, primary_color, secondary_color, content, social, seo, updated_at) VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`
-        : `INSERT INTO site_config (id, site_name, tagline, logo_url, primary_color, secondary_color, content, social, seo, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
+        ? `INSERT INTO site_config (id, site_name, tagline, logo_url, primary_color, secondary_color) VALUES (1, $1, $2, $3, $4, $5)`
+        : `INSERT INTO site_config (id, site_name, tagline, logo_url, primary_color, secondary_color) VALUES (1, ?, ?, ?, ?, ?)`;
       
       await dbRun(insertQuery, [
         siteName || 'Portfolio Website', 
         tagline || 'Building Amazing Digital Experiences', 
         logoUrl || '', 
         colors?.primary || '#007AFF', 
-        colors?.secondary || '#5856D6',
-        JSON.stringify(content || {}),
-        JSON.stringify(social || {}),
-        JSON.stringify(seo || {})
+        colors?.secondary || '#5856D6'
       ]);
       console.log('Config inserted successfully');
     } else {
