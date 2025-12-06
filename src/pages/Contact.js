@@ -13,7 +13,7 @@ const Contact = () => {
     message: ''
   });
   const [loading, setLoading] = useState(false);
-  const [contactInfo, setContactInfo] = useState({ email: 'om@omthacker.com', phone: 'Available on request' });
+  const [contactInfo, setContactInfo] = useState({ email: 'omi.thacker08@gmail.com', phone: 'Available on request' });
 
   React.useEffect(() => {
     fetch('https://portfolio-backend-qxhg.onrender.com/api/contact-info')
@@ -22,7 +22,7 @@ const Contact = () => {
       .catch(err => console.error('Failed to load contact info:', err));
   }, []);
 
-  const contactEmail = contactInfo.email || 'om@omthacker.com';
+  const contactEmail = contactInfo.email || 'omi.thacker08@gmail.com';
   const contactPhone = contactInfo.phone || 'Available on request';
 
   const handleInputChange = (e) => {
@@ -93,7 +93,7 @@ const Contact = () => {
                   <div className="method-icon">💼</div>
                   <div>
                     <h3>LinkedIn</h3>
-                    <p>linkedin.com/in/omthacker</p>
+                    <p>www.linkedin.com/in/om-thacker-39a2b965</p>
                   </div>
                 </div>
               </div>

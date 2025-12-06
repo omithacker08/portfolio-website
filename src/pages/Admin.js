@@ -751,7 +751,7 @@ const Admin = () => {
                               name="content.contact.email"
                               value={configForm.content?.contact?.email || ''}
                               onChange={handleConfigChange}
-                              placeholder="your@email.com"
+                              placeholder="omi.thacker08@gmail.com"
                             />
                           </div>
                           <div className="form-group">
@@ -761,7 +761,7 @@ const Admin = () => {
                               name="content.contact.phone"
                               value={configForm.content?.contact?.phone || ''}
                               onChange={handleConfigChange}
-                              placeholder="+1 (555) 123-4567"
+                              placeholder="+91 9870915196"
                             />
                           </div>
                         </div>
